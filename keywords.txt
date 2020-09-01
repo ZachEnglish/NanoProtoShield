@@ -1,0 +1,44 @@
+  
+#######################################
+# Syntax Coloring Map For 
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+NanoProtoShield	KEYWORD1
+
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+RGB_Strip_Color_Wipe	KEYWORD2
+RGB_Strip_Rainbow	KEYWORD2
+RGB_Strip_Clear	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+PIN_LEFT_BUTTON	LITERAL1
+PIN_RIGHT_BUTTON	LITERAL1
+PIN_UP_BUTTON	LITERAL1
+PIN_DOWN_BUTTON	LITERAL1
+PIN_ROT_ENC_BUTTON	LITERAL1
+PIN_ROT_ENC_A	LITERAL1
+PIN_ROT_ENC_B	LITERAL1
+PIN_SHIFT_LATCH	LITERAL1
+PIN_SHIFT_CLOCK	LITERAL1
+PIN_SHIFT_DATA	LITERAL1
+PIN_TEMPERATURE	LITERAL1
+PIN_LED	LITERAL1
+PIN_POT1	LITERAL1
+PIN_POT2	LITERAL1
+PIN_POT3	LITERAL1
+PIN_PHOTO	LITERAL1
+PIN_IR_RX	LITERAL1
+PIN_IR_TX	LITERAL1
+RGB_LED_COUNT	LITERAL1
+OLED_SCREEN_WIDTH	LITERAL1
+OLED_SCREEN_HEIGHT	LITERAL1
+OLED_RESET	LITERAL1
+OLED_ADDRESS	LITERAL1
