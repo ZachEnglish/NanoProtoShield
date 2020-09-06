@@ -65,6 +65,10 @@ class NanoProtoShield {
     DallasTemperature   m_temp_sensor;
     MPU6050             m_mpu;
 
+    byte                m_shift_7seg_left;
+    byte                m_shift_7seg_right;
+    byte                m_shift_led;
+
     void RGB_strip_color_wipe(uint8_t r, uint8_t g, uint8_t b, int wait);
     void RGB_strip_rainbow(int wait);
     void RGB_strip_clear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
@@ -79,6 +83,13 @@ class NanoProtoShield {
     float read_photo();
 
     void MPU_calculate_offsets(int wait);
+
+    void shift_7seg_set(byte left, byte right);
+    void shift_led_set(byte b);
+    byte shift_7seg_get_left();
+    byte shift_7seg_get_right();
+    byte shift_led_get();
+    void shift_clear();
 };
 
 

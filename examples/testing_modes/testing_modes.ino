@@ -1,9 +1,10 @@
 #include "NanoProtoShield.h"
 
-//Declare our Nano Proto Shield object
+//Declare Nano Proto Shield object
 NanoProtoShield g_nps;
 
-long g_timer = 0; //timer used for gyro calculations
+//timer used for gyro calculations
+long g_timer = 0;
 
 // ------------- MODE DEFINITIONS & DECLARATION -------------
 //What mode is our program in. Exercises different pieces of the board in different modes.
@@ -25,7 +26,7 @@ volatile MODES g_mode = MODE_RGB_COLOR_CHASE;
 int g_current_bit;
 
 
-enum DISPLAYS { DISPLAY_NONE, DISPLAY_RGB_LEDS, DISPLAY_SHIFT_REGS, DISPLAY_OLED, DISPLAY_ALPHANUM };
+enum DISPLAYS { DISPLAY_NONE, DISPLAY_RGB_LEDS, DISPLAY_SHIFT_REGS, DISPLAY_OLED };
 //due to the default argument being supplied, this function needs a forward declaration
 void clear_all_displays(DISPLAYS exception = DISPLAY_NONE);
 
@@ -146,9 +147,9 @@ void loop() {
       g_nps.m_temp_sensor.requestTemperatures();
       
       g_nps.OLED_print(
-        F("Temperature is:\n") 
-        + g_nps.m_temp_sensor.getTempCByIndex(0) + F("C\n")
-        + g_nps.m_temp_sensor.getTempFByindex(0) + F("F")
+        "Temperature is:\n"
+        + (String) g_nps.m_temp_sensor.getTempCByIndex(0) + "C\n"
+        + (String) g_nps.m_temp_sensor.getTempFByIndex(0) + "F"
         );
       break;
 
@@ -158,18 +159,18 @@ void loop() {
 
       if(millis() - g_timer > 1000){ // print data every second
         g_nps.OLED_print(
-          F("TEMP : ") + g_nps.m_mpu.getTemp()
-          + F("\nACC X : ") + g_nps.m_mpu.getAccX()
-          + "\tY : " + g_nps.m_mpu.getAccY()
-          + "\tZ : " + g_nps.m_mpu.getAccZ()
-          + F("\nGYRO X : ") + g_nps.m_mpu.getGyroX()
-          + "\tY : " + g_nps.m_mpu.getGyroY()
-          + "\tZ : " + g_nps.m_mpu.getGyroZ()
-          + F("\nACC ANG X : ") + g_nps.m_mpu.getAccAngleX()
-          + "\tY : " + g_nps.m_mpu.getAccAngleY()
-          + F("\nANGLE X : ") + g_nps.m_mpu.getAngleX()
-          + "\tY : " + g_nps.m_mpu.getAngleY()
-          + "\tZ : " + g_nps.m_mpu.getAngleZ()
+          "TEMP : " + (String) g_nps.m_mpu.getTemp()
+          + "\nACC X : " + (String) g_nps.m_mpu.getAccX()
+          + "\tY : " + (String) g_nps.m_mpu.getAccY()
+          + "\tZ : " + (String) g_nps.m_mpu.getAccZ()
+          + "\nGYRO X : " + (String) g_nps.m_mpu.getGyroX()
+          + "\tY : " + (String) g_nps.m_mpu.getGyroY()
+          + "\tZ : " + (String) g_nps.m_mpu.getGyroZ()
+          + "\nACC ANG X : " + (String) g_nps.m_mpu.getAccAngleX()
+          + "\tY : " + (String) g_nps.m_mpu.getAccAngleY()
+          + "\nANGLE X : " + (String) g_nps.m_mpu.getAngleX()
+          + "\tY : " + (String) g_nps.m_mpu.getAngleY()
+          + "\tZ : " + (String) g_nps.m_mpu.getAngleZ()
         );
         g_timer = millis();
       }
@@ -178,11 +179,11 @@ void loop() {
     case MODE_ANALOG_PRINT:
       clear_all_displays(DISPLAY_OLED);
       
-      g_nps.print(
-        F("POT1(V): ") + g_nps.read_pot1() + "V\n" +
-        F("POT2(V): ") + g_nps.read_pot2() + "V\n" +
-        F("POT3(V): ") + g_nps.read_pot3() + "V\n" +
-        F("PHOTO(V): ") + g_nps.read_photo() + "V\n"
+      g_nps.OLED_print(
+        "POT1(V): " + (String) g_nps.read_pot1() + "V\n" +
+        "POT2(V): " + (String) g_nps.read_pot2() + "V\n" +
+        "POT3(V): " + (String) g_nps.read_pot3() + "V\n" +
+        "PHOTO(V): " + (String) g_nps.read_photo() + "V\n"
         );
       break;
   }//end switch
@@ -231,12 +232,6 @@ void clear_OLED() {
 }
 
 
-void clear_alphanum() {
-  g_alpha4.clear();
-  g_alpha4.writeDisplay();
-}
-
-
 void clear_RGB() {
   g_nps.RGB_strip_clear();
 }
@@ -248,9 +243,6 @@ void clear_all_displays(DISPLAYS exception = DISPLAY_NONE) {
   }
   if ( exception != DISPLAY_OLED ) {
     clear_OLED();
-  }
-  if ( exception != DISPLAY_ALPHANUM ) {
-    clear_alphanum();
   }
   if ( exception != DISPLAY_RGB_LEDS ) {
     clear_RGB();

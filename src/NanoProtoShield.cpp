@@ -15,6 +15,10 @@ NanoProtoShield::NanoProtoShield() :
       for (;;); // Don't proceed, loop forever
     }
 
+    m_shift_7seg_left  = 0xFF;
+    m_shift_7seg_right = 0xFF;
+    m_shift_led        = 0x00;
+
     //Set up shift register pins
     pinMode(PIN_SHIFT_LATCH, OUTPUT);
     pinMode(PIN_SHIFT_CLOCK, OUTPUT);
@@ -118,4 +122,36 @@ void NanoProtoShield::MPU_calculate_offsets(int wait){
   m_mpu.begin();
   delay(wait);
   m_mpu.calcGyroOffsets();
+}
+
+void NanoProtoShield::shift_7seg_set(byte left, byte right){
+  //invert the input because the 7 segment leds are active low
+  m_shift_7seg_left = ~left;
+  m_shift_7seg_right = ~right;
+  digitalWrite(PIN_SHIFT_LATCH, LOW);
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_7seg_right); //this gets shifted to the second display, send it first
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_7seg_left);
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_led);
+  digitalWrite(PIN_SHIFT_LATCH, HIGH);
+}
+
+void NanoProtoShield::shift_led_set(byte b){
+  m_shift_led = b;
+  digitalWrite(PIN_SHIFT_LATCH, LOW);
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_7seg_right); //this gets shifted to the second display, send it first
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_7seg_left);
+  shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_led);
+  digitalWrite(PIN_SHIFT_LATCH, HIGH);
+}
+
+byte NanoProtoShield::shift_7seg_get_left(){
+  return ~m_shift_7seg_left;
+}
+
+byte NanoProtoShield::shift_7seg_get_right(){
+  return ~m_shift_7seg_right;
+}
+
+byte NanoProtoShield::shift_led_get(){
+  return m_shift_led;
 }
