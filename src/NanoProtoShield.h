@@ -7,7 +7,6 @@
 #include <Wire.h> //for talking to OLED display
 #include <Adafruit_GFX.h> //for talking to OLED display
 #include <Adafruit_SSD1306.h> //for talking to OLED display
-#include "Adafruit_LEDBackpack.h" //for talking to the 4x14 segment display over I2C
 #include <Encoder.h> //for talking to the rotary encoded
 #include <OneWire.h> //for talking to one wire devices like the temperature sensor.
     //Needed to modify the library to enable internal pull-up. See https://github.com/bigjosh/OneWireNoResistor/commit/ebba80cf61920aef399efa252826b1b59feb6589?branch=ebba80cf61920aef399efa252826b1b59feb6589&diff=split
@@ -56,18 +55,16 @@
 class NanoProtoShield {
     public:
 
-    NanoProtoShield(void);
+    NanoProtoShield();
 
-    Adafruit_NeoPixel   m_RGB_Strip;
-    Adafruit_SSD1306    m_oled_display;
+    void begin();
+
     Encoder             m_rotary_encoder;
     OneWire             m_one_wire;
     DallasTemperature   m_temp_sensor;
     MPU6050             m_mpu;
-
-    byte                m_shift_7seg_left;
-    byte                m_shift_7seg_right;
-    byte                m_shift_led;
+    Adafruit_SSD1306    m_oled_display;
+    Adafruit_NeoPixel   m_RGB_Strip;
 
     void RGB_strip_color_wipe(uint8_t r, uint8_t g, uint8_t b, int wait);
     void RGB_strip_rainbow(int wait);
@@ -75,7 +72,7 @@ class NanoProtoShield {
 
     void OLED_display(int clear_after);
     void OLED_clear();
-    void OLED_print(String s);
+    void OLED_print(const __FlashStringHelper *);
 
     float read_pot1();
     float read_pot2();
@@ -84,12 +81,21 @@ class NanoProtoShield {
 
     void MPU_calculate_offsets(int wait);
 
-    void shift_7seg_set(byte left, byte right);
-    void shift_led_set(byte b);
-    byte shift_7seg_get_left();
-    byte shift_7seg_get_right();
-    byte shift_led_get();
+    void shift_7seg_write(byte left, byte right);
+    void shift_led_write(byte b);
+    byte shift_7seg_left_read();
+    byte shift_7seg_right_read();
+    byte shift_led_read();
     void shift_clear();
+    void shift_test_sequence(int wait);
+
+    void interrupt();
+
+    private:
+    byte                m_shift_7seg_left;
+    byte                m_shift_7seg_right;
+    byte                m_shift_led;
+    volatile uint8_t    m_interrupt;
 };
 
 
