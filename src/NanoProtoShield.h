@@ -50,19 +50,35 @@
 #define OLED_ADDRESS 0x3C
 
 
+#define ANALOG_TO_VOLTAGE (5.0 / 1023.0)
+
 //Declare class object to abstract and hide many of the complexities of the board
 class NanoProtoShield {
     public:
 
     NanoProtoShield(void);
 
-    //protected:
-    Adafruit_NeoPixel m_RGB_Strip;
-    Adafruit_SSD1306 m_oled_display;
+    Adafruit_NeoPixel   m_RGB_Strip;
+    Adafruit_SSD1306    m_oled_display;
+    Encoder             m_rotary_encoder;
+    OneWire             m_one_wire;
+    DallasTemperature   m_temp_sensor;
+    MPU6050             m_mpu;
 
-    void RGB_Strip_Color_Wipe(uint8_t r, uint8_t g, uint8_t b, int wait);
-    void RGB_Strip_Rainbow(int wait);
-    void RGB_Strip_Clear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
+    void RGB_strip_color_wipe(uint8_t r, uint8_t g, uint8_t b, int wait);
+    void RGB_strip_rainbow(int wait);
+    void RGB_strip_clear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
+
+    void OLED_display(int clear_after);
+    void OLED_clear();
+    void OLED_print(String s);
+
+    float read_pot1();
+    float read_pot2();
+    float read_pot3();
+    float read_photo();
+
+    void MPU_calculate_offsets(int wait);
 };
 
 

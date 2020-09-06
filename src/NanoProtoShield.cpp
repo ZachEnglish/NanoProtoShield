@@ -2,9 +2,32 @@
 #include "NanoProtoShield.h"
 
 NanoProtoShield::NanoProtoShield() :
-    m_RGB_Strip(RGB_LED_COUNT,PIN_RGB_LED, NEO_GRB + NEO_KHZ800),
-    m_oled_display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET)
-    {
+  m_RGB_Strip(RGB_LED_COUNT,PIN_RGB_LED, NEO_GRB + NEO_KHZ800),
+  m_oled_display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
+  m_rotary_encoder(PIN_ROT_ENC_A, PIN_ROT_ENC_B),
+  m_one_wire(PIN_TEMPERATURE),
+  m_temp_sensor(&m_one_wire),
+  m_mpu(Wire)
+  {
+    //Set up the OLED display
+    if (!m_oled_display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) { // Address 0x3C for 128x64
+      Serial.println(F("SSD1306 allocation failed"));
+      for (;;); // Don't proceed, loop forever
+    }
+
+    //Set up shift register pins
+    pinMode(PIN_SHIFT_LATCH, OUTPUT);
+    pinMode(PIN_SHIFT_CLOCK, OUTPUT);
+    pinMode(PIN_SHIFT_DATA, OUTPUT);
+
+    //Set up the buttons as imputs
+    pinMode(PIN_LEFT_BUTTON, INPUT);
+    pinMode(PIN_RIGHT_BUTTON, INPUT);
+    pinMode(PIN_UP_BUTTON, INPUT);
+    pinMode(PIN_DOWN_BUTTON, INPUT);
+    pinMode(PIN_ROT_ENC_BUTTON, INPUT);
+    pinMode(PIN_ROT_ENC_A, INPUT);
+    pinMode(PIN_ROT_ENC_B, INPUT);
 }
 
 // Fill strip pixels one after another with a color. Strip is NOT cleared
@@ -12,17 +35,17 @@ NanoProtoShield::NanoProtoShield() :
 // (as a single 'packed' 32-bit value, which you can get by calling
 // strip.Color(red, green, blue) as shown in the loop() function above),
 // and a delay time (in milliseconds) between pixels.
-void NanoProtoShield::RGB_Strip_Color_Wipe(uint8_t r, uint8_t g, uint8_t b, int wait){
-    uint32_t color = m_RGB_Strip.Color(r,g,b);
-    for (int i = 0; i < m_RGB_Strip.numPixels(); i++) { // For each pixel in strip...
-        m_RGB_Strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
-        m_RGB_Strip.show();                          //  Update strip to match
-        delay(wait);                           //  Pause for a moment
-    }
+void NanoProtoShield::RGB_strip_color_wipe(uint8_t r, uint8_t g, uint8_t b, int wait){
+  uint32_t color = m_RGB_Strip.Color(r,g,b);
+  for (int i = 0; i < m_RGB_Strip.numPixels(); i++) { // For each pixel in strip...
+    m_RGB_Strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    m_RGB_Strip.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
+  }
 }
 
 // Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
-void NanoProtoShield::RGB_Strip_Rainbow(int wait) {
+void NanoProtoShield::RGB_strip_rainbow(int wait) {
   // Hue of first pixel runs 5 complete loops through the color wheel.
   // Color wheel has a range of 65536 but it's OK if we roll over, so
   // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
@@ -45,7 +68,54 @@ void NanoProtoShield::RGB_Strip_Rainbow(int wait) {
   }
 }
 
-void NanoProtoShield::RGB_Strip_Clear() {
-    m_RGB_Strip.clear();
-    m_RGB_Strip.show();
+void NanoProtoShield::RGB_strip_clear() {
+  m_RGB_Strip.clear();
+  m_RGB_Strip.show();
+}
+
+
+void NanoProtoShield::OLED_display(int clear_after = 0) {
+  m_oled_display.display();
+
+  if(clear_after > 0)
+  {
+    delay(clear_after);
+    m_oled_display.clearDisplay();
+  }
+}
+
+void NanoProtoShield::OLED_clear() {
+  m_oled_display.clearDisplay();
+  m_oled_display.display();
+}
+
+void NanoProtoShield::OLED_print(String s) {
+  m_oled_display.clearDisplay();
+  m_oled_display.setTextSize(1);
+  m_oled_display.setTextColor(SSD1306_WHITE);
+  m_oled_display.setCursor(0, 0);
+  m_oled_display.println(s);
+  m_oled_display.display();
+}
+
+float NanoProtoShield::read_pot1() {
+  return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;
+}
+
+float NanoProtoShield::read_pot2() {
+  return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;
+}
+
+float NanoProtoShield::read_pot3() {
+  return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;
+}
+
+float NanoProtoShield::read_photo() {
+  return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;
+}
+
+void NanoProtoShield::MPU_calculate_offsets(int wait){
+  m_mpu.begin();
+  delay(wait);
+  m_mpu.calcGyroOffsets();
 }
