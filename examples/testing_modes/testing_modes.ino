@@ -19,38 +19,34 @@ enum MODES {  MODE_RGB_COLOR_CHASE,
               MODE_6050_PRINT,
               MODE_ANALOG_PRINT,
               MODE_COUNT };
-volatile MODES g_mode = MODE_SHIFT_LEDS;
+volatile MODES g_mode = MODE_6050_PRINT;
 
 
 //Used to keep track of what bit is lit/unlit on the 7seg displays while manipulating them
 int g_current_bit;
 
 
-enum DISPLAYS { DISPLAY_NONE, DISPLAY_RGB_LEDS, DISPLAY_SHIFT_LEDS, DISPLAY_SHIFT_7SEG, DISPLAY_OLED };
-//due to the default argument being supplied, this function needs a forward declaration
-void clear_all_displays(DISPLAYS exception = DISPLAY_NONE);
-
 void setup() {
-  Serial.begin(115200);
-  Serial.println("setup");
+  //Start out at the beginning
   g_current_bit = 0;
+
+  //Initialize the NanoProtoShield object
   g_nps.begin();
 
+  //There will be the adafruit logo in memory on start up, this shows it briefly
   g_nps.OLED_display(250);
 
   g_nps.shift_test_sequence(250);
 
   //Set up the MPU6050 Gyro/Accel - Show DO NOT MOVE message on OLED dispaly
-  clear_all_displays();
-
+  g_nps.clear_all_displays();
   g_nps.OLED_print(F("Calculating gyro offset, do not move MPU6050"));
+  g_nps.OLED_display();
   g_nps.MPU_calculate_offsets(1000);
-  g_nps.OLED_clear();
-
-  clear_all_displays();
+  g_nps.clear_all_displays();
 
   //attach the ISR to the UP button.
-  attachInterrupt( digitalPinToInterrupt(PIN_UP_BUTTON), increment_mode, FALLING );
+  attachInterrupt( digitalPinToInterrupt(PIN_UP_BUTTON), isr_increment_mode, FALLING );
 } //end setup()
 
 
@@ -65,27 +61,27 @@ void loop() {
   switch (g_mode)
   {
     case MODE_RGB_COLOR_CHASE:
-      clear_all_displays(DISPLAY_RGB_LEDS);
+      g_nps.clear_all_displays(DISPLAY_RGB_LEDS);
 
       if(starting_mode != g_mode)
         break;
-      g_nps.RGB_strip_color_wipe(255,   0,   0, 50); // Red
+      g_nps.RGB_color_wipe(255,   0,   0, 50); // Red
       if(starting_mode != g_mode)
         break;
-      g_nps.RGB_strip_color_wipe(  0, 255,   0, 50); // Green
+      g_nps.RGB_color_wipe(  0, 255,   0, 50); // Green
       if(starting_mode != g_mode)
         break;
-      g_nps.RGB_strip_color_wipe(  0,   0, 255, 50); // Blue
+      g_nps.RGB_color_wipe(  0,   0, 255, 50); // Blue
       break;
 
     case MODE_RGB_RAINBOW:
-      clear_all_displays(DISPLAY_RGB_LEDS);
+      g_nps.clear_all_displays(DISPLAY_RGB_LEDS);
 
-      g_nps.RGB_strip_rainbow(1);
+      g_nps.RGB_rainbow(1);
       break;
 
     case MODE_SHIFT_LEDS:
-      clear_all_displays(DISPLAY_SHIFT_LEDS);
+      g_nps.clear_all_displays(DISPLAY_SHIFT_LEDS);
 
       //Play with the shift registers
       g_nps.shift_led_write(0b10101010);
@@ -96,111 +92,93 @@ void loop() {
       break;
 
     case MODE_SHIFT_7SEG:
-      clear_all_displays(DISPLAY_SHIFT_7SEG);
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG);
 
       g_current_bit = (g_current_bit + 1)%8;
-      b = 1 << g_current_bit;
-      bn = b ^ 0xFF;
+      bitSet(b,g_current_bit);
+      bn = ~b;
 
       g_nps.shift_7seg_write(b, bn);
-      delay(100);
+      delay(150);
       break;
 
     case MODE_ROT_ENC:
-      clear_all_displays(DISPLAY_SHIFT_7SEG);
-      g_current_bit = (g_nps.m_rotary_encoder.read()/4)%8;
-      b = 1 << abs(g_current_bit);
-      bn = b ^ 0xFF;
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG);
+      g_current_bit = (g_nps.rotary_encoder_read()/4)%8;
+      bitSet(b,abs(g_current_bit));
+      bn = ~b;
 
       g_nps.shift_7seg_write(b, bn);
-      delay(100);
       break;
 
     case MODE_OLED_HELLO_WORLD:
-      clear_all_displays(DISPLAY_OLED);
+      g_nps.clear_all_displays(DISPLAY_OLED);
 
       g_nps.OLED_print(F("Hello world!"));
+      g_nps.OLED_display();
       break;
 
     case MODE_OLED_LOVE_MY_WIFE:
-      clear_all_displays(DISPLAY_OLED);
-      g_nps.OLED_print(F("I enjoy this!\nI love my wife!"));
+      g_nps.clear_all_displays(DISPLAY_OLED);
+
+      g_nps.OLED_println(F("I enjoy this!"));
+      g_nps.OLED_println(F("I love my wife!"));
+      g_nps.OLED_display();
       break;
 
     case MODE_TEMPERATURE_PRINT:
-      clear_all_displays(DISPLAY_OLED);
+      g_nps.clear_all_displays(DISPLAY_OLED);
 
-      g_nps.m_temp_sensor.requestTemperatures();
+      g_nps.take_temperature_reading();
       
-      g_nps.OLED_print(
-        F("Temperature is:\n")
-        //+ (String) g_nps.m_temp_sensor.getTempCByIndex(0) + "C\n"
-        //+ (String) g_nps.m_temp_sensor.getTempFByIndex(0) + "F"
-        );
+      g_nps.OLED_println(F("Temperature is:"));
+      g_nps.OLED_print((String)g_nps.get_temp_C());
+      g_nps.OLED_println(F("C"));
+      g_nps.OLED_print((String)g_nps.get_temp_F());
+      g_nps.OLED_println(F("F"));
+      g_nps.OLED_display();
       break;
 
     case MODE_6050_PRINT:
-      clear_all_displays(DISPLAY_OLED);
-      g_nps.m_mpu.update();
+      g_nps.clear_all_displays(DISPLAY_OLED);
+      g_nps.MPU_update();
 
       if(millis() - g_timer > 1000){ // print data every second
-      //   g_nps.OLED_print(
-      //     "TEMP : " + (String) g_nps.m_mpu.getTemp()
-      //     + "\nACC X : " + (String) g_nps.m_mpu.getAccX()
-      //     + "\tY : " + (String) g_nps.m_mpu.getAccY()
-      //     + "\tZ : " + (String) g_nps.m_mpu.getAccZ()
-      //     + "\nGYRO X : " + (String) g_nps.m_mpu.getGyroX()
-      //     + "\tY : " + (String) g_nps.m_mpu.getGyroY()
-      //     + "\tZ : " + (String) g_nps.m_mpu.getGyroZ()
-      //     + "\nACC ANG X : " + (String) g_nps.m_mpu.getAccAngleX()
-      //     + "\tY : " + (String) g_nps.m_mpu.getAccAngleY()
-      //     + "\nANGLE X : " + (String) g_nps.m_mpu.getAngleX()
-      //     + "\tY : " + (String) g_nps.m_mpu.getAngleY()
-      //     + "\tZ : " + (String) g_nps.m_mpu.getAngleZ()
-      //  );
+        g_nps.OLED_print(F("TEMP  : ")); g_nps.OLED_println((String)g_nps.MPU_get_temp());
+        g_nps.OLED_print(F("ACC X : ")); g_nps.OLED_print((String)g_nps.MPU_get_acc_x());
+        g_nps.OLED_print("\tY : "); g_nps.OLED_print((String)g_nps.MPU_get_acc_y());
+        g_nps.OLED_print("\tZ : "); g_nps.OLED_println((String)g_nps.MPU_get_acc_z());
+      
+        g_nps.OLED_print(F("GYRO X : ")); g_nps.OLED_print((String)g_nps.MPU_get_gyro_x());
+        g_nps.OLED_print("\tY : "); g_nps.OLED_print((String)g_nps.MPU_get_gyro_y());
+        g_nps.OLED_print("\tZ : "); g_nps.OLED_println((String)g_nps.MPU_get_gyro_z());
+      
+        g_nps.OLED_print(F("X:")); g_nps.OLED_print((String)g_nps.MPU_get_acc_angle_x());
+        g_nps.OLED_print("\tY:"); g_nps.OLED_println((String)g_nps.MPU_get_acc_angle_y());
+        
+        g_nps.OLED_print(F("ANGLE X : ")); g_nps.OLED_print((String)g_nps.MPU_get_angle_x());
+        g_nps.OLED_print("\tY : "); g_nps.OLED_print((String)g_nps.MPU_get_angle_y());
+        g_nps.OLED_print("\tZ : "); g_nps.OLED_println((String)g_nps.MPU_get_angle_z());
+        g_nps.OLED_display();
         g_timer = millis();
       }
       break;
 
     case MODE_ANALOG_PRINT:
-      clear_all_displays(DISPLAY_OLED);
+      g_nps.clear_all_displays(DISPLAY_OLED);
       
-      // strcpy(str_buffer,"POT1(V): ");
-      // //strcat(str_buffer,g_nps.read_pot1());
-      // strcat(str_buffer,"V\n");
-      // strcpy(str_buffer,"POT2(V): ");
-      // //strcat(str_buffer,g_nps.read_pot2());
-      // strcat(str_buffer,"V\n");
-      // strcpy(str_buffer,"POT3(V): ");
-      // //strcat(str_buffer,g_nps.read_pot3());
-      // strcat(str_buffer,"V\n");
-      // strcpy(str_buffer,"PHOTO(V): ");
-      // //strcat(str_buffer,g_nps.read_photo());
-      // strcat(str_buffer,"V\n");
-      // //g_nps.OLED_print(str_buffer);
+      g_nps.OLED_print(F("POT1(V): ")); g_nps.OLED_println((String)g_nps.pot1_read());
+      g_nps.OLED_print(F("POT2(V): ")); g_nps.OLED_println((String)g_nps.pot2_read());
+      g_nps.OLED_print(F("POT3(V): ")); g_nps.OLED_println((String)g_nps.pot3_read());
+      g_nps.OLED_print(F("PHOTO(V): ")); g_nps.OLED_println((String)g_nps.photo_read());
+      g_nps.OLED_display();
       break;
   }//end switch
 }//end loop()
 
 
-// ISR to walk through the modes
-void increment_mode() {
+// Interrupt Service Routine (ISR) to walk through the modes
+void isr_increment_mode() {
   g_mode = (g_mode + 1) % MODE_COUNT;
   g_nps.interrupt();
-}
-
-
-void clear_all_displays(DISPLAYS exception = DISPLAY_NONE) {
-  if ( exception != DISPLAY_SHIFT_LEDS ) {
-    g_nps.shift_led_write(0x00);
-  }
-  if ( exception != DISPLAY_SHIFT_7SEG ) {
-    g_nps.shift_7seg_write(0x00,0x00);
-  }
-  if ( exception != DISPLAY_OLED ) {
-    g_nps.OLED_clear();
-  }
-  if ( exception != DISPLAY_RGB_LEDS ) {
-    g_nps.RGB_strip_clear();
-  }
 }
