@@ -2,6 +2,25 @@
 #include "NanoProtoShield.h"
 
 
+byte g_map_7seg[] = {
+  0b00111111,
+  0b00000110,
+  0b01011011,
+  0b01001111,
+  0b01100110,
+  0b01101101,
+  0b01111101,
+  0b00000111,
+  0b01111111,
+  0b01101111,
+  0b01110111,
+  0b01111100,
+  0b00111001,
+  0b01011110,
+  0b01111001,
+  0b01110001
+};
+
 uint32_t g_RGB_data[8];
 
 NanoProtoShield::NanoProtoShield() :
@@ -184,6 +203,22 @@ void NanoProtoShield::shift_7seg_write(byte left, byte right){
   shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_7seg_left);
   shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift_led);
   digitalWrite(PIN_SHIFT_LATCH, HIGH);
+}
+
+void NanoProtoShield::shift_7seg_write(uint8_t num){
+  byte left, right;
+  right = num % 10;
+  left = (num / 10) % 10;
+  
+  shift_7seg_write(g_map_7seg[left],g_map_7seg[right]);
+}
+
+void NanoProtoShield::shift_7seg_write_hex(uint8_t num){
+  byte left, right;
+  right = num & 0x0F;
+  left = (num & 0xF0)>>4;
+  
+  shift_7seg_write(g_map_7seg[left],g_map_7seg[right]);
 }
 
 void NanoProtoShield::shift_led_write(byte b){

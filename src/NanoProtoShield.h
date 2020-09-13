@@ -97,6 +97,8 @@ class NanoProtoShield {
     void MPU_calculate_offsets(int wait);
 
     void shift_7seg_write(byte left, byte right);
+    void shift_7seg_write(uint8_t num);
+    void shift_7seg_write_hex(uint8_t num);
     void shift_led_write(byte b);
     byte shift_7seg_left_read();
     byte shift_7seg_right_read();

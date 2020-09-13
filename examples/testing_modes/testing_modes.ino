@@ -13,6 +13,8 @@ enum MODES {  MODE_RGB_COLOR_CHASE,
               MODE_RGB_PIXEL_SET,
               MODE_SHIFT_LEDS,
               MODE_SHIFT_7SEG,
+              MODE_SHIFT_7SEG_HEX,
+              MODE_SHIFT_7SEG_DEC,
               MODE_ROT_ENC,
               MODE_OLED_HELLO_WORLD,
               MODE_OLED_LOVE_MY_WIFE,
@@ -20,13 +22,15 @@ enum MODES {  MODE_RGB_COLOR_CHASE,
               MODE_6050_PRINT,
               MODE_ANALOG_PRINT,
               MODE_COUNT };
-volatile MODES g_mode = MODE_RGB_COLOR_CHASE;
+volatile MODES g_mode = MODE_SHIFT_7SEG_HEX;
 
 
 //Used to keep track of what bit is lit/unlit on the 7seg displays while manipulating them
 uint8_t g_current_7seg_bit;
 
 uint8_t g_current_RGB_bit;
+
+uint8_t g_7seg_alpha;
 
 int increment_value_with_max_rollover(int value, int max);
 int decrement_value_with_max_rollover(int value, int max);
@@ -36,6 +40,7 @@ void setup() {
   //Start out at the beginning
   g_current_7seg_bit = 0;
   g_current_RGB_bit = 0;
+  g_7seg_alpha = 0;
 
   //Initialize the NanoProtoShield object
   g_nps.begin();
@@ -94,7 +99,7 @@ void loop() {
       break;
 
     case MODE_RGB_PIXEL_SET:
-      g_nps.clear_all_displays(bit(DISPLAY_RGB_LEDS)|bit(DISPLAY_SHIFT_LEDS));
+      g_nps.clear_all_displays(bit(DISPLAY_RGB_LEDS) | bit(DISPLAY_SHIFT_LEDS));
 
       g_nps.button_check();
       if(g_nps.button_pressed(BUTTON_RIGHT))
@@ -128,6 +133,34 @@ void loop() {
 
       g_nps.shift_7seg_write(b, bn);
       delay(150);
+      break;
+
+    case MODE_SHIFT_7SEG_HEX:
+      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG) | bit(DISPLAY_OLED) );
+
+      g_nps.button_check();
+      if(g_nps.button_pressed(BUTTON_RIGHT))
+        g_7seg_alpha = increment_value_with_max_rollover(g_7seg_alpha, 256);
+      if(g_nps.button_pressed(BUTTON_LEFT))
+        g_7seg_alpha = decrement_value_with_max_rollover(g_7seg_alpha, 256);
+
+      g_nps.shift_7seg_write_hex(g_7seg_alpha);
+      g_nps.OLED_print(g_7seg_alpha + 0.0f);
+      g_nps.OLED_display();
+      break;
+
+    case MODE_SHIFT_7SEG_DEC:
+      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG) | bit(DISPLAY_OLED) );
+
+      g_nps.button_check();
+      if(g_nps.button_pressed(BUTTON_RIGHT))
+        g_7seg_alpha = increment_value_with_max_rollover(g_7seg_alpha, 100);
+      if(g_nps.button_pressed(BUTTON_LEFT))
+        g_7seg_alpha = decrement_value_with_max_rollover(g_7seg_alpha, 100);
+
+      g_nps.shift_7seg_write(g_7seg_alpha);
+      g_nps.OLED_print(g_7seg_alpha + 0.0f);
+      g_nps.OLED_display();
       break;
 
     case MODE_ROT_ENC:
