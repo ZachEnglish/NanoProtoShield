@@ -12,6 +12,8 @@
     //Needed to modify the library to enable internal pull-up. See https://github.com/bigjosh/OneWireNoResistor/commit/ebba80cf61920aef399efa252826b1b59feb6589?branch=ebba80cf61920aef399efa252826b1b59feb6589&diff=split
 #include <DallasTemperature.h> //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
+#include <AceButton.h> //For handling button events
+using namespace ace_button;
 
 
 // ------------- BOARD SPECIFIC DEFINES -------------
@@ -50,34 +52,17 @@
 
 
 #define ANALOG_TO_VOLTAGE (5.0 / 1023.0)
+#define VOLTAGE_TO_RGB (255.0 / 5.0)
 
 enum DISPLAYS { DISPLAY_NONE, DISPLAY_RGB_LEDS, DISPLAY_SHIFT_LEDS, DISPLAY_SHIFT_7SEG, DISPLAY_OLED };
 
-enum FEATURES {
-    BUTTON_LEFT     = 1<<0,
-    BUTTON_RIGHT    = 1<<1,
-    BUTTON_UP       = 1<<2,
-    BUTTON_DOWN     = 1<<3,
-    ROT_ENC_BUTTON  = 1<<4,
-    ROT_ENC         = 1<<5,
-    SHIFT_OUT       = 1<<6,
-    TEMPERATURE     = 1<<7,
-    RGB_LED         = 1<<8,
-    POT1            = 1<<9,
-    POT2            = 1<<10,
-    POT3            = 1<<11,
-    PHOTO           = 1<<12,
-    IR_RX           = 1<<13,
-    IR_TX           = 1<<14,
-    ALL_FEATURES    = BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN | ROT_ENC_BUTTON | ROT_ENC | SHIFT_OUT
-                        | TEMPERATURE | RGB_LED | POT1 | POT2 | POT3 | PHOTO | IR_RX | IR_TX
-    };
+enum BUTTONS { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT };
 
 //Declare class object to abstract and hide many of the complexities of the board
 class NanoProtoShield {
     public:
 
-    NanoProtoShield(FEATURES feature_list = ALL_FEATURES);
+    NanoProtoShield();
 
     void begin();
 
@@ -141,26 +126,40 @@ class NanoProtoShield {
 
     void clear_all_displays(DISPLAYS exception = DISPLAY_NONE);
 
+    void button_check();
+    bool button_pressed(BUTTONS b, bool clear = true);
+    void button_down_event_set(void (*butten_event)(void));
+
     //TODO
     //Need functions for all four buttons, rotary encoder twists and buttons
     //Need objects, functions, and test mode for IR
     //Need init way to use a reduced number of pins so some can be used for alternate functions
+    //loot at other types (float?!?) for OLED_print(ln)
+    //RGB internal array... actually use the array
+    //Make print commands for 7 segment display so integers or floats can be displayed
+    
 
     private:
-    Encoder             m_rotary_encoder;
-    OneWire             m_one_wire;
-    DallasTemperature   m_temp_sensor;
-    MPU6050             m_mpu;
-    Adafruit_SSD1306    m_oled_display;
-    Adafruit_NeoPixel   m_RGB;
+    Encoder                 m_rotary_encoder;
+    OneWire                 m_one_wire;
+    MPU6050                 m_mpu;
+    Adafruit_SSD1306        m_oled_display;
+    Adafruit_NeoPixel       m_RGB;
 
-    byte                m_shift_7seg_left;
-    byte                m_shift_7seg_right;
-    byte                m_shift_led;
-    volatile uint8_t    m_interrupt;
-    float               m_temperature_C;
-    float               m_temperature_F;
-    FEATURES            m_enabled_features;
+    byte                    m_shift_7seg_left;
+    byte                    m_shift_7seg_right;
+    byte                    m_shift_led;
+
+    volatile byte           m_interrupt;
+
+    float                   m_temperature_C; //could use uint_16's for these and save a few bytes
+    float                   m_temperature_F;
+
+    byte                    m_button_state;
+    byte                    m_button_pressed;
+
+    void (*m_button_down_event)();
+
 };
 
 

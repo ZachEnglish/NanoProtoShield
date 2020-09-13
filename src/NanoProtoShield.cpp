@@ -4,20 +4,22 @@
 
 uint32_t g_RGB_data[8];
 
-NanoProtoShield::NanoProtoShield(FEATURES feature_list = ALL_FEATURES) :
+NanoProtoShield::NanoProtoShield() :
   m_rotary_encoder(PIN_ROT_ENC_A, PIN_ROT_ENC_B),
   m_one_wire(PIN_TEMPERATURE),
-  m_temp_sensor(&m_one_wire),
   m_mpu(Wire),
   m_oled_display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
   m_RGB(RGB_LED_COUNT,PIN_RGB_LED, NEO_GRB + NEO_KHZ800)
+  //m_button_left(PIN_LEFT_BUTTON),
+  //m_button_right(PIN_RIGHT_BUTTON)
   {
     //Initialize the class's memory of what data the shift registers have
     m_shift_7seg_left  = 0xFF;
     m_shift_7seg_right = 0xFF;
     m_shift_led        = 0x00;
     m_interrupt        = 0;
-  
+    m_button_state     = 0;
+    m_button_pressed   = 0;
 }
 
 void NanoProtoShield::begin(){
@@ -34,9 +36,6 @@ void NanoProtoShield::begin(){
     pinMode(PIN_ROT_ENC_BUTTON, INPUT);
     pinMode(PIN_ROT_ENC_A, INPUT);
     pinMode(PIN_ROT_ENC_B, INPUT);
-    
-    //Start up the temperature sensor library
-    m_temp_sensor.begin();
 
     //Set up the RGB strip
     m_RGB.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
@@ -100,12 +99,13 @@ void NanoProtoShield::RGB_rainbow(int wait) {
 }
 
 void NanoProtoShield::RGB_clear() {
+  memset(g_RGB_data, 0x00, sizeof(g_RGB_data));
   m_RGB.clear();
   m_RGB.show();
 }
 
 void NanoProtoShield::RGB_set_pixel_color(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b){
-  m_RGB.setPixelColor(pixel, m_RGB.Color(r,g,b));
+  m_RGB.setPixelColor( pixel % RGB_LED_COUNT, m_RGB.Color(r,g,b));
 }
 
 void NanoProtoShield::RGB_set_brightness(uint8_t brightness){
@@ -235,27 +235,32 @@ void NanoProtoShield::shift_test_sequence(int wait){
 }
 
 void NanoProtoShield::take_temperature_reading(){
-  m_temp_sensor.requestTemperatures();
-  m_temperature_C = m_temp_sensor.getTempCByIndex(0);
-  m_temperature_F = m_temp_sensor.getTempFByIndex(0);
+  DallasTemperature temp_sensor(&m_one_wire);
+    
+  //Start up the temperature sensor library
+  temp_sensor.begin();
+
+  temp_sensor.requestTemperatures();
+  m_temperature_C = temp_sensor.getTempCByIndex(0);
+  m_temperature_F = temp_sensor.getTempFByIndex(0);
 }
 
 void NanoProtoShield::interrupt(){
   m_interrupt++;
 }
 
-void NanoProtoShield::clear_all_displays(DISPLAYS exception = DISPLAY_NONE){
-  if ( exception != DISPLAY_SHIFT_LEDS ) {
+void NanoProtoShield::clear_all_displays(DISPLAYS exceptions = DISPLAY_NONE){
+  if ( !bitRead(exceptions, DISPLAY_SHIFT_LEDS) ) {
     shift_led_write(0x00);
     }
-  if ( exception != DISPLAY_SHIFT_7SEG ) {
+  if ( !bitRead(exceptions, DISPLAY_SHIFT_7SEG) ) {
     shift_7seg_write(0x00,0x00);
   }
   OLED_clear();
-  if ( exception != DISPLAY_OLED ) {
+  if (!bitRead(exceptions, DISPLAY_OLED) ) {
     OLED_display();
   }
-  if ( exception != DISPLAY_RGB_LEDS ) {
+  if ( !bitRead(exceptions, DISPLAY_RGB_LEDS) ) {
     RGB_clear();
   }
 }
@@ -266,6 +271,35 @@ void NanoProtoShield::MPU_calculate_offsets(int wait){
   m_mpu.calcGyroOffsets();
 }
 
-void NanoProtoShield::MPU_update() {
+void NanoProtoShield::MPU_update(){
   m_mpu.update();
+}
+
+void NanoProtoShield::button_check(){
+  byte old_state = m_button_state;
+
+  m_button_state = digitalRead(PIN_UP_BUTTON) << BUTTON_UP |
+                   digitalRead(PIN_DOWN_BUTTON) << BUTTON_DOWN |
+                   digitalRead(PIN_LEFT_BUTTON) << BUTTON_LEFT |
+                   digitalRead(PIN_RIGHT_BUTTON) << BUTTON_RIGHT;
+
+  m_button_pressed = m_button_pressed | (m_button_state &(~old_state));
+  if(button_pressed(BUTTON_UP))
+    m_button_down_event();
+}
+
+bool NanoProtoShield::button_pressed(BUTTONS b, bool clear = true){
+  if(bitRead(m_button_pressed, b))
+  {
+    if(clear)
+    {
+      m_button_pressed = bitClear(m_button_pressed, b);
+    }
+    return true;
+  }
+  return false;
+}
+
+void NanoProtoShield::button_down_event_set(void (*butten_event)(void)){
+  m_button_down_event = butten_event;
 }
