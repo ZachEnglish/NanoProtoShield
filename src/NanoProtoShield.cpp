@@ -2,23 +2,23 @@
 #include "NanoProtoShield.h"
 
 
-byte g_map_7seg[] = {
-  0b00111111,
-  0b00000110,
-  0b01011011,
-  0b01001111,
-  0b01100110,
-  0b01101101,
-  0b01111101,
-  0b00000111,
-  0b01111111,
-  0b01101111,
-  0b01110111,
-  0b01111100,
-  0b00111001,
-  0b01011110,
-  0b01111001,
-  0b01110001
+const byte g_map_7seg[] PROGMEM = {
+  0b00111111, //0
+  0b00000110, //1
+  0b01011011, //2
+  0b01001111, //3
+  0b01100110, //4
+  0b01101101, //5
+  0b01111101, //6
+  0b00000111, //7
+  0b01111111, //8
+  0b01101111, //9
+  0b01110111, //A
+  0b01111100, //b
+  0b00111001, //C
+  0b01011110, //d
+  0b01111001, //E
+  0b01110001  //F
 };
 
 uint32_t g_RGB_data[8];
@@ -210,7 +210,7 @@ void NanoProtoShield::shift_7seg_write(uint8_t num){
   right = num % 10;
   left = (num / 10) % 10;
   
-  shift_7seg_write(g_map_7seg[left],g_map_7seg[right]);
+  shift_7seg_write(pgm_read_byte_near(g_map_7seg + left),pgm_read_byte_near(g_map_7seg + right));
 }
 
 void NanoProtoShield::shift_7seg_write_hex(uint8_t num){
@@ -218,7 +218,7 @@ void NanoProtoShield::shift_7seg_write_hex(uint8_t num){
   right = num & 0x0F;
   left = (num & 0xF0)>>4;
   
-  shift_7seg_write(g_map_7seg[left],g_map_7seg[right]);
+  shift_7seg_write(pgm_read_byte_near(g_map_7seg + left),pgm_read_byte_near(g_map_7seg + right));
 }
 
 void NanoProtoShield::shift_led_write(byte b){
@@ -285,17 +285,17 @@ void NanoProtoShield::interrupt(){
 }
 
 void NanoProtoShield::clear_all_displays(DISPLAYS exceptions = DISPLAY_NONE){
-  if ( !bitRead(exceptions, DISPLAY_SHIFT_LEDS) ) {
+  if ( !(exceptions & DISPLAY_SHIFT_LEDS) ) {
     shift_led_write(0x00);
     }
-  if ( !bitRead(exceptions, DISPLAY_SHIFT_7SEG) ) {
+  if ( !(exceptions & DISPLAY_SHIFT_7SEG) ) {
     shift_7seg_write(0x00,0x00);
   }
   OLED_clear();
-  if (!bitRead(exceptions, DISPLAY_OLED) ) {
+  if (!(exceptions & DISPLAY_OLED) ) {
     OLED_display();
   }
-  if ( !bitRead(exceptions, DISPLAY_RGB_LEDS) ) {
+  if ( !(exceptions & DISPLAY_RGB_LEDS) ) {
     RGB_clear();
   }
 }

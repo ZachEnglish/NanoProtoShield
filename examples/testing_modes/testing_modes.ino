@@ -1,5 +1,7 @@
 #include "NanoProtoShield.h"
 
+#define QUICK_BOOT true //if true, this skips all the testing/demo at the beginning and goes right to the first actual mode
+
 //Declare Nano Proto Shield object
 NanoProtoShield g_nps;
 
@@ -41,20 +43,26 @@ void setup() {
   g_current_7seg_bit = 0;
   g_current_RGB_bit = 0;
   g_7seg_alpha = 0;
+  int mpu_offset_time = 10;
 
   //Initialize the NanoProtoShield object
   g_nps.begin();
 
-  //There will be the adafruit logo in memory on start up, this shows it briefly
-  g_nps.OLED_display(250);
+  if(!QUICK_BOOT)
+  {
+    //There will be the adafruit logo in memory on start up, this shows it briefly
+    g_nps.OLED_display(250);
 
-  g_nps.shift_test_sequence(250);
+    g_nps.shift_test_sequence(250);
 
-  //Set up the MPU6050 Gyro/Accel - Show DO NOT MOVE message on OLED dispaly
-  g_nps.clear_all_displays();
-  g_nps.OLED_print(F("Calculating gyro offset, do not move MPU6050"));
-  g_nps.OLED_display();
-  g_nps.MPU_calculate_offsets(1000);
+    //Set up the MPU6050 Gyro/Accel - Show DO NOT MOVE message on OLED dispaly
+    g_nps.clear_all_displays();
+    g_nps.OLED_print(F("Calculating gyro offset, do not move MPU6050"));
+    g_nps.OLED_display();
+    mpu_offset_time = 1000;
+  }
+
+  g_nps.MPU_calculate_offsets(mpu_offset_time);
   g_nps.clear_all_displays();
 
   //attach the ISR to the UP button.
@@ -76,7 +84,7 @@ void loop() {
   switch (g_mode)
   {
     case MODE_RGB_COLOR_CHASE:
-      g_nps.clear_all_displays(bit(DISPLAY_RGB_LEDS));
+      g_nps.clear_all_displays(DISPLAY_RGB_LEDS);
 
       if(starting_mode != g_mode)
         break;
@@ -93,13 +101,13 @@ void loop() {
       break;
 
     case MODE_RGB_RAINBOW:
-      g_nps.clear_all_displays(bit(DISPLAY_RGB_LEDS));
+      g_nps.clear_all_displays(DISPLAY_RGB_LEDS);
 
       g_nps.RGB_rainbow(1);
       break;
 
     case MODE_RGB_PIXEL_SET:
-      g_nps.clear_all_displays(bit(DISPLAY_RGB_LEDS) | bit(DISPLAY_SHIFT_LEDS));
+      g_nps.clear_all_displays(DISPLAY_RGB_LEDS | DISPLAY_SHIFT_LEDS);
 
       g_nps.button_check();
       if(g_nps.button_pressed(BUTTON_RIGHT))
@@ -114,7 +122,7 @@ void loop() {
       break;
 
     case MODE_SHIFT_LEDS:
-      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_LEDS));
+      g_nps.clear_all_displays(DISPLAY_SHIFT_LEDS);
 
       //Play with the shift registers
       g_nps.shift_led_write(0b10101010);
@@ -125,7 +133,7 @@ void loop() {
       break;
 
     case MODE_SHIFT_7SEG:
-      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG));
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG);
 
       g_current_7seg_bit = (g_current_7seg_bit + 1)%8;
       bitSet(b,g_current_7seg_bit);
@@ -136,7 +144,7 @@ void loop() {
       break;
 
     case MODE_SHIFT_7SEG_HEX:
-      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG) | bit(DISPLAY_OLED) );
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG | DISPLAY_OLED);
 
       g_nps.button_check();
       if(g_nps.button_pressed(BUTTON_RIGHT))
@@ -150,7 +158,7 @@ void loop() {
       break;
 
     case MODE_SHIFT_7SEG_DEC:
-      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG) | bit(DISPLAY_OLED) );
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG | DISPLAY_OLED);
 
       g_nps.button_check();
       if(g_nps.button_pressed(BUTTON_RIGHT))
@@ -164,7 +172,7 @@ void loop() {
       break;
 
     case MODE_ROT_ENC:
-      g_nps.clear_all_displays(bit(DISPLAY_SHIFT_7SEG));
+      g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG);
       g_current_7seg_bit = (g_nps.rotary_encoder_read()/4)%8;
       bitSet(b,abs(g_current_7seg_bit));
       bn = ~b;
@@ -173,14 +181,14 @@ void loop() {
       break;
 
     case MODE_OLED_HELLO_WORLD:
-      g_nps.clear_all_displays(bit(DISPLAY_OLED));
+      g_nps.clear_all_displays(DISPLAY_OLED);
 
       g_nps.OLED_print(F("Hello world!"));
       g_nps.OLED_display();
       break;
 
     case MODE_OLED_LOVE_MY_WIFE:
-      g_nps.clear_all_displays(bit(DISPLAY_OLED));
+      g_nps.clear_all_displays(DISPLAY_OLED);
 
       g_nps.OLED_println(F("I enjoy this!"));
       g_nps.OLED_println(F("I love my wife!"));
@@ -188,7 +196,7 @@ void loop() {
       break;
 
     case MODE_TEMPERATURE_PRINT:
-      g_nps.clear_all_displays(bit(DISPLAY_OLED));
+      g_nps.clear_all_displays(DISPLAY_OLED);
 
       g_nps.take_temperature_reading();
       
@@ -201,7 +209,7 @@ void loop() {
       break;
 
     case MODE_6050_PRINT:
-      g_nps.clear_all_displays(bit(DISPLAY_OLED));
+      g_nps.clear_all_displays(DISPLAY_OLED);
       g_nps.MPU_update();
 
       if(millis() - g_timer > 1000){ // print data every second
@@ -226,7 +234,7 @@ void loop() {
       break;
 
     case MODE_ANALOG_PRINT:
-      g_nps.clear_all_displays(bit(DISPLAY_OLED));
+      g_nps.clear_all_displays(DISPLAY_OLED);
       
       g_nps.OLED_print(F("POT1(V): ")); g_nps.OLED_println((String)g_nps.pot1_read());
       g_nps.OLED_print(F("POT2(V): ")); g_nps.OLED_println((String)g_nps.pot2_read());
