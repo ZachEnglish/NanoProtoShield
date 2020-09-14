@@ -319,7 +319,7 @@ void NanoProtoShield::button_check(){
                    digitalRead(PIN_RIGHT_BUTTON) << BUTTON_RIGHT;
 
   m_button_pressed = m_button_pressed | (m_button_state &(~old_state));
-  if(button_pressed(BUTTON_UP))
+  if(button_pressed(BUTTON_DOWN))
     m_button_down_event();
 }
 

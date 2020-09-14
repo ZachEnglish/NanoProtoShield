@@ -24,7 +24,7 @@ enum MODES {  MODE_RGB_COLOR_CHASE,
               MODE_6050_PRINT,
               MODE_ANALOG_PRINT,
               MODE_COUNT };
-volatile MODES g_mode = MODE_SHIFT_7SEG_HEX;
+volatile MODES g_mode = MODE_RGB_COLOR_CHASE;
 
 
 //Used to keep track of what bit is lit/unlit on the 7seg displays while manipulating them
@@ -264,5 +264,5 @@ int decrement_value_with_max_rollover(int value, int max) {
 }
 
 void not_isr_decrement_mode() {
-  //g_mode = decrement_value_with_max_rollover(g_mode, MODE_COUNT);
+  g_mode = decrement_value_with_max_rollover(g_mode, MODE_COUNT);
 }
