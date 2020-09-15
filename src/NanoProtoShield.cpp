@@ -212,7 +212,7 @@ void NanoProtoShield::shift_7seg_write(uint8_t num){
   right = num % 10;
   left = (num / 10) % 10;
   
-  shift_7seg_write(pgm_read_byte_near(g_map_7seg + left),pgm_read_byte_near(g_map_7seg + right));
+  shift_7seg_write(pgm_read_byte_near(g_map_7seg + left)|((num>=200)?0x80:0x00),pgm_read_byte_near(g_map_7seg + right)|((num>=100)?0x80:0x00));
 }
 
 void NanoProtoShield::shift_7seg_write_hex(uint8_t num){

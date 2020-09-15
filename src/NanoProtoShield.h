@@ -12,8 +12,6 @@
     //Needed to modify the library to enable internal pull-up. See https://github.com/bigjosh/OneWireNoResistor/commit/ebba80cf61920aef399efa252826b1b59feb6589?branch=ebba80cf61920aef399efa252826b1b59feb6589&diff=split
 #include <DallasTemperature.h> //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
-#include <AceButton.h> //For handling button events
-using namespace ace_button;
 
 
 // ------------- BOARD SPECIFIC DEFINES -------------
@@ -98,7 +96,7 @@ class NanoProtoShield {
     float pot3_read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
     float photo_read() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
-    int32_t rotary_encoder_read() {return m_rotary_encoder.read()/4;}
+    int32_t rotary_encoder_read() {return -m_rotary_encoder.read()/4;}
 
     void MPU_calculate_offsets(int wait);
 

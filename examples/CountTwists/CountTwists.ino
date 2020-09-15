@@ -7,5 +7,5 @@ void setup() {
 }
 
 void loop() {
-    g_nps.shift_7seg_write(-g_nps.rotary_encoder_read());
+    g_nps.shift_7seg_write(g_nps.rotary_encoder_read());
 }
