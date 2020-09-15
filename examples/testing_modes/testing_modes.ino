@@ -173,7 +173,7 @@ void loop() {
 
     case MODE_ROT_ENC:
       g_nps.clear_all_displays(DISPLAY_SHIFT_7SEG);
-      g_current_7seg_bit = (g_nps.rotary_encoder_read()/4)%8;
+      g_current_7seg_bit = g_nps.rotary_encoder_read() % 8;
       bitSet(b,abs(g_current_7seg_bit));
       bn = ~b;
 

@@ -71,6 +71,8 @@ void NanoProtoShield::begin(){
     m_oled_display.setTextColor(SSD1306_WHITE);
 
     memset(g_RGB_data, 0x00, sizeof(g_RGB_data));
+
+    clear_all_displays();
 }
 
 // Fill strip pixels one after another with a color. Strip is NOT cleared

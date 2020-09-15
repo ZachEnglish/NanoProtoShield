@@ -98,7 +98,7 @@ class NanoProtoShield {
     float pot3_read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
     float photo_read() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
-    int32_t rotary_encoder_read() {return m_rotary_encoder.read();}
+    int32_t rotary_encoder_read() {return m_rotary_encoder.read()/4;}
 
     void MPU_calculate_offsets(int wait);
 
