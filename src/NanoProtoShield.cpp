@@ -21,6 +21,8 @@ const byte g_map_7seg[] PROGMEM = {
   0b01110001  //F
 };
 
+#define DEC_7SEG 0b10000000
+
 uint32_t g_RGB_data[8];
 
 NanoProtoShield::NanoProtoShield() :
@@ -210,9 +212,11 @@ void NanoProtoShield::shift_7seg_write(byte left, byte right){
 void NanoProtoShield::shift_7seg_write(uint8_t num){
   byte left, right;
   right = num % 10;
+  right = pgm_read_byte_near(g_map_7seg + right) | ((num>=100)?DEC_7SEG:0x00); //get the digit and determine if the decimal is needed
   left = (num / 10) % 10;
+  left = pgm_read_byte_near(g_map_7seg + left) | ((num>=200)?DEC_7SEG:0x00);
   
-  shift_7seg_write(pgm_read_byte_near(g_map_7seg + left)|((num>=200)?0x80:0x00),pgm_read_byte_near(g_map_7seg + right)|((num>=100)?0x80:0x00));
+  shift_7seg_write(left, right);
 }
 
 void NanoProtoShield::shift_7seg_write_hex(uint8_t num){
