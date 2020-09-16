@@ -131,6 +131,20 @@ void NanoProtoShield::RGB_set_pixel_color(uint8_t pixel, uint8_t r, uint8_t g, u
   m_RGB.setPixelColor( pixel % RGB_LED_COUNT, m_RGB.Color(r,g,b));
 }
 
+void NanoProtoShield::RGB_set_pixels_color(uint8_t r, uint8_t g, uint8_t b){
+  for(int i = 0; i < RGB_LED_COUNT; i++)
+    RGB_set_pixel_color(i,r,g,b);
+}
+
+void NanoProtoShield::RGB_set_pixel_color(uint8_t pixel, uint32_t color){
+  m_RGB.setPixelColor( pixel, color );
+}
+
+void NanoProtoShield::RGB_set_pixels_color(uint32_t color){
+  for(int i = 0; i < RGB_LED_COUNT; i++)
+    RGB_set_pixel_color(i,color);
+}
+
 void NanoProtoShield::RGB_set_brightness(uint8_t brightness){
   m_RGB.setBrightness(brightness);
 }

@@ -74,8 +74,12 @@ class NanoProtoShield {
     void RGB_rainbow(int wait);
     void RGB_clear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
     void RGB_set_pixel_color(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b);
+    void RGB_set_pixels_color(uint8_t r, uint8_t g, uint8_t b);
+    void RGB_set_pixel_color(uint8_t pixel, uint32_t color);
+    void RGB_set_pixels_color(uint32_t color);
     void RGB_set_brightness(uint8_t brightness);
     void RGB_show();
+    uint32_t RGB_get_color_from_HSV(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
 
     void OLED_display(int clear_after = 0);
     void OLED_clear();
