@@ -1,3 +1,8 @@
+// This example sets the color of the 8 RGB LEDs based on the temperature of the
+// temperature sensor. It is supposed to go from a "cool" blue to a "warm" red in
+// the span of room temperature to "pinched between fingers" temperature.
+// Currently seems to go backwards around the color wheel... need to debug.
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;
@@ -26,7 +31,6 @@ void loop() {
 
   g_nps.takeTemperatureReading();
   hue = get_hue_from_temperature(g_nps.getTempF(), 80, 90);
-
 
   g_nps.rgbSetPixelsColor( g_nps.rgbGetColorFromHsv(hue));
   g_nps.rgbShow();

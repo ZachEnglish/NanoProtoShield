@@ -1,3 +1,9 @@
+// This example uses the two 7 segment digits to show how many times the
+// rotary encoder has been turned. Clockwise makes the count go up and
+// counter-clockwise makes it go down. It is stored in an 8 bit value, so
+// it wraps about 0-255. The decimal places in the 7 segment indicate one
+// hundred or two hundred.  
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;

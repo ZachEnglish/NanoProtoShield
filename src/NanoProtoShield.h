@@ -145,8 +145,6 @@ class NanoProtoShield {
     //Need objects, functions, and test mode for IR
     //Need init way to use a reduced number of pins so some can be used for alternate functions
     //loot at other types (float?!?) for oledPrint(ln)
-    //RGB internal array... actually use the array
-    //Make print commands for 7 segment display so integers or floats can be displayed
     
 
     private:

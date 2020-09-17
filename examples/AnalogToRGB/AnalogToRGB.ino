@@ -1,3 +1,6 @@
+// This example uses the 3 potentiometers to set the red, green, and blue
+// values of the 8 RGB LEDs. They should update in real time.
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;

@@ -1,3 +1,5 @@
+// This example displays the state of the UP button on the OLED display.
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;

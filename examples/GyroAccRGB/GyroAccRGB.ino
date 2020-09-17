@@ -1,3 +1,7 @@
+// This example sets the hue and brightness of the RGB LEDs based on readings
+// from the acceleromter and gyroscope. The goal is to see them changed by
+// tilting the board different directions.
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;
