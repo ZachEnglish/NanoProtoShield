@@ -3,9 +3,9 @@
 NanoProtoShield g_nps;
 
 void setup() {
-    g_nps.begin();
+  g_nps.begin();
 }
 
 void loop() {
-    g_nps.shift_7seg_write(g_nps.rotary_encoder_read());
+  g_nps.shift7segWrite(g_nps.rotaryEncoderRead());
 }

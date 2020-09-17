@@ -70,105 +70,105 @@ class NanoProtoShield {
 
     void begin();
 
-    void RGB_color_wipe(uint8_t r, uint8_t g, uint8_t b, int wait);
-    void RGB_rainbow(int wait);
-    void RGB_clear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
-    void RGB_set_pixel_color(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b);
-    void RGB_set_pixels_color(uint8_t r, uint8_t g, uint8_t b);
-    void RGB_set_pixel_color(uint8_t pixel, uint32_t color);
-    void RGB_set_pixels_color(uint32_t color);
-    void RGB_set_brightness(uint8_t brightness);
-    void RGB_show();
-    uint32_t RGB_get_color_from_HSV(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
+    void rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait);
+    void rgbRainbow(int wait);
+    void rgbClear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
+    void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b);
+    void rgbSetPixelsColor(uint8_t r, uint8_t g, uint8_t b);
+    void rgbSetPixelColor(uint8_t pixel, uint32_t color);
+    void rgbSetPixelsColor(uint32_t color);
+    void rgbSetBrightness(uint8_t brightness);
+    void rgbShow();
+    uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
 
-    void OLED_display(int clear_after = 0);
-    void OLED_clear();
-    size_t OLED_print(const __FlashStringHelper *);
-    size_t OLED_print(const String &);
-    size_t OLED_print(const char[]);
-    size_t OLED_print(char);
-    size_t OLED_print(const Printable&);
-    size_t OLED_println(const __FlashStringHelper *);
-    size_t OLED_println(const String &s);
-    size_t OLED_println(const char[]);
-    size_t OLED_println(char);
-    size_t OLED_println(const Printable&);
-    size_t OLED_println(void);
+    void oledDisplay(int clear_after = 0);
+    void oledClear();
+    size_t oledPrint(const __FlashStringHelper *);
+    size_t oledPrint(const String &);
+    size_t oledPrint(const char[]);
+    size_t oledPrint(char);
+    size_t oledPrint(const Printable&);
+    size_t oledPrintln(const __FlashStringHelper *);
+    size_t oledPrintln(const String &s);
+    size_t oledPrintln(const char[]);
+    size_t oledPrintln(char);
+    size_t oledPrintln(const Printable&);
+    size_t oledPrintln(void);
 
-    float pot1_read() {return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;}
-    float pot2_read() {return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;}
-    float pot3_read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
-    float photo_read() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
+    float pot1Read() {return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;}
+    float pot2Read() {return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;}
+    float pot3Read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
+    float photoRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
-    int32_t rotary_encoder_read() {return -m_rotary_encoder.read()/4;}
+    int32_t rotaryEncoderRead() {return -m_rotaryEncoder.read()/4;}
 
-    void MPU_calculate_offsets(int wait);
+    void mpuCalculateOffsets(int wait);
 
-    void shift_7seg_write(byte left, byte right);
-    void shift_7seg_write(uint8_t num);
-    void shift_7seg_write_hex(uint8_t num);
-    void shift_led_write(byte b);
-    byte shift_7seg_left_read();
-    byte shift_7seg_right_read();
-    byte shift_led_read();
-    void shift_clear();
-    void shift_test_sequence(int wait);
+    void shift7segWrite(byte left, byte right);
+    void shift7segWrite(uint8_t num);
+    void shift7segWriteHex(uint8_t num);
+    void shiftLedWrite(byte b);
+    byte shift7segLeftRead();
+    byte shift7segRightRead();
+    byte shiftLedRead();
+    void shiftClear();
+    void shiftTestSequence(int wait);
 
-    void take_temperature_reading();
-    float get_temp_C() {return m_temperature_C;}
-    float get_temp_F() {return m_temperature_F;}
+    void takeTemperatureReading();
+    float getTempC() {return m_temperatureC;}
+    float getTempF() {return m_temperatureF;}
 
-    void MPU_update();
-    float MPU_get_temp(){ return m_mpu.getTemp(); };
-    float MPU_get_acc_x(){ return m_mpu.getAccX(); };
-    float MPU_get_acc_y(){ return m_mpu.getAccY(); };
-    float MPU_get_acc_z(){ return m_mpu.getAccZ(); };
-    float MPU_get_gyro_x(){ return m_mpu.getGyroX(); };
-    float MPU_get_gyro_y(){ return m_mpu.getGyroY(); };
-    float MPU_get_gyro_z(){ return m_mpu.getGyroZ(); };
-    float MPU_get_acc_angle_x(){ return m_mpu.getAccAngleX(); };
-    float MPU_get_acc_angle_y(){ return m_mpu.getAccAngleY(); };//yup, no Z
-    float MPU_get_angle_x(){ return m_mpu.getAngleX(); };
-    float MPU_get_angle_y(){ return m_mpu.getAngleY(); };
-    float MPU_get_angle_z(){ return m_mpu.getAngleZ(); };
+    void mpuUpdate();
+    float mpuGetTemp(){ return m_mpu.getTemp(); };
+    float mpuGetAccX(){ return m_mpu.getAccX(); };
+    float mpuGetAccY(){ return m_mpu.getAccY(); };
+    float mpuGetAccZ(){ return m_mpu.getAccZ(); };
+    float mpuGetGyroX(){ return m_mpu.getGyroX(); };
+    float mpuGetGyroY(){ return m_mpu.getGyroY(); };
+    float mpuGetGyroZ(){ return m_mpu.getGyroZ(); };
+    float mpuGetAccAngleX(){ return m_mpu.getAccAngleX(); };
+    float mpuGetAccAngleY(){ return m_mpu.getAccAngleY(); };//yup, no Z
+    float mpuGetAngleX(){ return m_mpu.getAngleX(); };
+    float mpuGetAngleY(){ return m_mpu.getAngleY(); };
+    float mpuGetAngleZ(){ return m_mpu.getAngleZ(); };
 
     void interrupt();
 
-    void clear_all_displays(DISPLAYS exception = DISPLAY_NONE);
+    void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
 
-    void button_check();
-    bool button_pressed(BUTTONS b, bool clear = true);
-    void button_down_event_set(void (*butten_event)(void));
+    void buttonCheck();
+    bool buttonPressed(BUTTONS b, bool clear = true);
+    void buttonDownEventSet(void (*butten_event)(void));
 
     //TODO
     //Need functions for all four buttons, rotary encoder twists and buttons
     //Need objects, functions, and test mode for IR
     //Need init way to use a reduced number of pins so some can be used for alternate functions
-    //loot at other types (float?!?) for OLED_print(ln)
+    //loot at other types (float?!?) for oledPrint(ln)
     //RGB internal array... actually use the array
     //Make print commands for 7 segment display so integers or floats can be displayed
     
 
     private:
-    Encoder                 m_rotary_encoder;
-    OneWire                 m_one_wire;
+    Encoder                 m_rotaryEncoder;
+    OneWire                 m_oneWire;
     MPU6050                 m_mpu;
     Adafruit_SSD1306        m_oled_display;
-    Adafruit_NeoPixel       m_RGB;
+    Adafruit_NeoPixel       m_rgb;
 
-    byte                    m_shift_7seg_left;
-    byte                    m_shift_7seg_right;
-    byte                    m_shift_led;
+    byte                    m_shift7segLeft;
+    byte                    m_shift7segRight;
+    byte                    m_shiftLed;
 
     volatile byte           m_interrupt;
 
-    float                   m_temperature_C; //could use uint_16's for these and save a few bytes
-    float                   m_temperature_F;
+    float                   m_temperatureC; //could use uint_16's for these and save a few bytes
+    float                   m_temperatureF;
 
-    byte                    m_button_state;
-    byte                    m_button_pressed;
+    byte                    m_buttonState;
+    byte                    m_buttonPressed;
 
-    void (*m_button_down_event)();
+    void (*m_buttonDownEvent)();
 
 };
 

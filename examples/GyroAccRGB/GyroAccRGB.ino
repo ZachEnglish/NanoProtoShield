@@ -2,37 +2,37 @@
 
 NanoProtoShield g_nps;
 
-void setup(){
-    g_nps.begin();
-    
-    g_nps.OLED_print(F("Calculating gyro offset, do not move MPU6050"));
-    g_nps.OLED_display();
-    g_nps.MPU_calculate_offsets(1000);
-    g_nps.clear_all_displays();
+void setup() {
+  g_nps.begin();
+
+  g_nps.oledPrint(F("Calculating gyro offset, do not move MPU6050"));
+  g_nps.oledDisplay();
+  g_nps.mpuCalculateOffsets(1000);
+  g_nps.clearAllDisplays();
 }
 
-uint8_t map_angle_to_brightness(float a){
-    return( (a + 90.0f) * (255.0f/180.0f) );
+uint8_t mapAngleToBrightness(float a) {
+  return ( (a + 90.0f) * (255.0f / 180.0f) );
 }
 
-uint16_t map_angle_to_hue(float a){
-    return( (a + 90.0f) * (255.0f*255.0f/180.0f) );
+uint16_t mapAngleToHue(float a) {
+  return ( (a + 90.0f) * (255.0f * 255.0f / 180.0f) );
 }
 
-void loop(){
-    uint8_t brightness;
-    uint16_t hue;
-    float x, y;
+void loop() {
+  uint8_t brightness;
+  uint16_t hue;
+  float x, y;
 
-    g_nps.MPU_update();
+  g_nps.mpuUpdate();
 
-    x = g_nps.MPU_get_acc_angle_x();
-    y = g_nps.MPU_get_acc_angle_y();
+  x = g_nps.mpuGetAccAngleX();
+  y = g_nps.mpuGetAccAngleY();
 
-    brightness = map_angle_to_brightness(x);
-    hue = map_angle_to_hue(y);
+  brightness = mapAngleToBrightness(x);
+  hue = mapAngleToHue(y);
 
-    g_nps.RGB_set_pixels_color(hue);
-    g_nps.RGB_set_brightness(brightness);
-    g_nps.RGB_show();
+  g_nps.rgbSetPixelsColor(hue);
+  g_nps.rgbSetBrightness(brightness);
+  g_nps.rgbShow();
 }
