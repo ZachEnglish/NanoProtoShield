@@ -26,7 +26,7 @@ const byte g_map_7seg[] PROGMEM = {
 uint32_t g_RGB_data[8];
 
 NanoProtoShield::NanoProtoShield() :
-  m_rotaryEncoder(PIN_ROT_ENC_A, PIN_ROT_ENC_B),
+  m_rotary(PIN_ROT_ENC_B, PIN_ROT_ENC_A), //this order makes clockwise positive on the NPS
   m_oneWire(PIN_TEMPERATURE),
   m_mpu(Wire),
   m_oled_display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
@@ -41,6 +41,11 @@ NanoProtoShield::NanoProtoShield() :
     m_interrupt        = 0;
     m_buttonState     = 0;
     m_buttonPressed   = 0;
+
+    for(int i = 0; i < BUTTON_COUNT; i++){
+      m_buttonPressEvents[i] = NULL;
+      m_buttonReleaseEvents[i] = NULL;
+    }
 }
 
 void NanoProtoShield::begin(){
@@ -297,7 +302,6 @@ void NanoProtoShield::takeTemperatureReading(){
 
   temp_sensor.requestTemperatures();
   m_temperatureC = temp_sensor.getTempCByIndex(0);
-  m_temperatureF = temp_sensor.getTempFByIndex(0);
 }
 
 void NanoProtoShield::interrupt(){
@@ -330,20 +334,27 @@ void NanoProtoShield::mpuUpdate(){
   m_mpu.update();
 }
 
-void NanoProtoShield::buttonCheck(){
+void NanoProtoShield::buttonCheckForEvent(){
   byte old_state = m_buttonState;
 
   m_buttonState = digitalRead(PIN_UP_BUTTON) << BUTTON_UP |
                    digitalRead(PIN_DOWN_BUTTON) << BUTTON_DOWN |
                    digitalRead(PIN_LEFT_BUTTON) << BUTTON_LEFT |
-                   digitalRead(PIN_RIGHT_BUTTON) << BUTTON_RIGHT;
+                   digitalRead(PIN_RIGHT_BUTTON) << BUTTON_RIGHT |
+                   !digitalRead(PIN_ROT_ENC_BUTTON) << BUTTON_ROTARY;
 
   m_buttonPressed = m_buttonPressed | (m_buttonState &(~old_state));
-  if(buttonPressed(BUTTON_DOWN))
-    m_buttonDownEvent();
+  m_buttonReleased = m_buttonReleased | ((~m_buttonState) &(old_state)); 
+
+  for(int i = 0; i < BUTTON_COUNT; i++){
+    if(m_buttonPressEvents[i] && buttonPressed(i))
+      m_buttonPressEvents[i]();
+    else if(m_buttonReleaseEvents[i] && buttonReleased(i))
+      m_buttonReleaseEvents[i]();
+  }
 }
 
-bool NanoProtoShield::buttonPressed(BUTTONS b, bool clear = true){
+bool NanoProtoShield::buttonPressed(BUTTON b, bool clear = true){
   if(bitRead(m_buttonPressed, b))
   {
     if(clear)
@@ -355,6 +366,33 @@ bool NanoProtoShield::buttonPressed(BUTTONS b, bool clear = true){
   return false;
 }
 
-void NanoProtoShield::buttonDownEventSet(void (*butten_event)(void)){
-  m_buttonDownEvent = butten_event;
+bool NanoProtoShield::buttonReleased(BUTTON b, bool clear = true){
+  if(bitRead(m_buttonReleased, b))
+  {
+    if(clear)
+    {
+      m_buttonReleased = bitClear(m_buttonReleased, b);
+    }
+    return true;
+  }
+  return false;
+}
+
+void NanoProtoShield::buttonSetPressEvent(BUTTON b, void (*buttonEvent)(void)){
+  m_buttonPressEvents[b] = buttonEvent; //TODO: add checking for 'b'
+}
+
+void NanoProtoShield::buttonSetReleaseEvent(BUTTON b, void (*buttonEvent)(void)){
+  m_buttonReleaseEvents[b] = buttonEvent;
+}
+
+int incrementValueWithMaxRollover(int value, int max) {
+  return (value + 1) % max;
+}
+
+int decrementValueWithMaxRollover(int value, int max) {
+  if (--value < 0)
+    value = max - 1;
+  value %= max;
+  return value;
 }

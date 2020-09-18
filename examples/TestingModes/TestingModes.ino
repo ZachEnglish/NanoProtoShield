@@ -35,9 +35,6 @@ uint8_t g_currentRgbBit;
 
 uint8_t g_7segAlpha;
 
-int incrementValueWithMaxRollover(int value, int max);
-int decrementValueWithMaxRollover(int value, int max);
-
 void setup() {
   Serial.begin(112500);
   //Start out at the beginning
@@ -68,7 +65,7 @@ void setup() {
 
   //attach the ISR to the UP button.
   attachInterrupt( digitalPinToInterrupt(PIN_UP_BUTTON), isrIncrementMode, FALLING );
-  g_nps.buttonDownEventSet(notIsrDecrementMode);
+  g_nps.buttonSetPressEvent(BUTTON_DOWN, notIsrDecrementMode);
 } //end setup()
 
 
@@ -77,7 +74,7 @@ void loop() {
   byte bn;
   MODES startingMode = g_mode;
 
-  g_nps.buttonCheck();
+  g_nps.buttonCheckForEvent();
 
   // if(g_nps.buttonPressed(BUTTON_DOWN))
   //   g_mode = decrementValueWithMaxRollover(g_mode, MODE_COUNT);
@@ -90,15 +87,15 @@ void loop() {
       if (startingMode != g_mode)
         break;
       g_nps.rgbColorWipe(255,   0,   0, 50); // Red
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       if (startingMode != g_mode)
         break;
       g_nps.rgbColorWipe(  0, 255,   0, 50); // Green
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       if (startingMode != g_mode)
         break;
       g_nps.rgbColorWipe(  0,   0, 255, 50); // Blue
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       break;
 
     case MODE_RGB_RAINBOW:
@@ -110,7 +107,7 @@ void loop() {
     case MODE_RGB_PIXEL_SET:
       g_nps.clearAllDisplays(DISPLAY_RGB_LEDS | DISPLAY_SHIFT_LEDS);
 
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       if (g_nps.buttonPressed(BUTTON_RIGHT))
         g_currentRgbBit = incrementValueWithMaxRollover(g_currentRgbBit, RGB_LED_COUNT);
       if (g_nps.buttonPressed(BUTTON_LEFT))
@@ -147,7 +144,7 @@ void loop() {
     case MODE_SHIFT_7SEG_HEX:
       g_nps.clearAllDisplays(DISPLAY_SHIFT_7SEG | DISPLAY_OLED);
 
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       if (g_nps.buttonPressed(BUTTON_RIGHT))
         g_7segAlpha = incrementValueWithMaxRollover(g_7segAlpha, 256);
       if (g_nps.buttonPressed(BUTTON_LEFT))
@@ -161,7 +158,7 @@ void loop() {
     case MODE_SHIFT_7SEG_DEC:
       g_nps.clearAllDisplays(DISPLAY_SHIFT_7SEG | DISPLAY_OLED);
 
-      g_nps.buttonCheck();
+      g_nps.buttonCheckForEvent();
       if (g_nps.buttonPressed(BUTTON_RIGHT))
         g_7segAlpha = incrementValueWithMaxRollover(g_7segAlpha, 100);
       if (g_nps.buttonPressed(BUTTON_LEFT))
@@ -174,7 +171,7 @@ void loop() {
 
     case MODE_ROT_ENC:
       g_nps.clearAllDisplays(DISPLAY_SHIFT_7SEG);
-      g_current7segBit = g_nps.rotaryEncoderRead() % 8;
+      g_current7segBit = g_nps.rotaryRead() % 8;
       bitSet(b, abs(g_current7segBit));
       bn = ~b;
 
@@ -251,17 +248,6 @@ void loop() {
 void isrIncrementMode() {
   g_mode = incrementValueWithMaxRollover(g_mode, MODE_COUNT);
   g_nps.interrupt();
-}
-
-int incrementValueWithMaxRollover(int value, int max) {
-  return (value + 1) % max;
-}
-
-int decrementValueWithMaxRollover(int value, int max) {
-  if (--value < 0)
-    value = max - 1;
-  value %= max;
-  return value;
 }
 
 void notIsrDecrementMode() {

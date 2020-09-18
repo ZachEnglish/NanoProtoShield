@@ -60,7 +60,7 @@ enum DISPLAYS {
     };
 #define DISPLAY_NONE 0
 
-enum BUTTONS { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT };
+enum BUTTON { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_ROTARY, BUTTON_COUNT };
 
 //Declare class object to abstract and hide many of the complexities of the board
 class NanoProtoShield {
@@ -100,7 +100,8 @@ class NanoProtoShield {
     float pot3Read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
     float photoRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
-    int32_t rotaryEncoderRead() {return -m_rotaryEncoder.read()/4;}
+    int rotaryRead() {return m_rotary.read()/4;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
+    void rotaryWrite(int value) {m_rotary.write(value*4);}
 
     void mpuCalculateOffsets(int wait);
 
@@ -116,7 +117,7 @@ class NanoProtoShield {
 
     void takeTemperatureReading();
     float getTempC() {return m_temperatureC;}
-    float getTempF() {return m_temperatureF;}
+    float getTempF() {return ((m_temperatureC * 1.8f) + 32.0f) ;}
 
     void mpuUpdate();
     float mpuGetTemp(){ return m_mpu.getTemp(); };
@@ -136,19 +137,45 @@ class NanoProtoShield {
 
     void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
 
-    void buttonCheck();
-    bool buttonPressed(BUTTONS b, bool clear = true);
-    void buttonDownEventSet(void (*butten_event)(void));
+    //buttonCheckForEvent must be called regularly (e.g. in the loop function) for the event system to work. This will call
+    //any appropriate event handlers if a state transition which has a handler is calculated. If there is not a event handler
+    //for any calculated button event, it sets up the internal state for use by the buttonPressed() and buttonReleased()
+    //functions
+    void buttonCheckForEvent();
+
+    //buttonPressed will return if a given button has been calculated to have been pressed (via a buttonCheckForEvent() call)
+    //You may optionally clear the flag indicating the press.
+    bool buttonPressed(BUTTON b, bool clear = true);
+
+    //buttonReleased will return if a given button has been calculated to have been released (via a buttonCheckForEvent() call)
+    //You may optionally clear the flag indicating the release.
+    bool buttonReleased(BUTTON b, bool clear = true);
+
+    //Set up event handlers for button presses and releases calculated by buttonCheckForEvent() calls.
+    //Cannot be used with buttonPressed() or buttonReleased() as it clears the flag automatically
+    //These events are only triggered when buttonCheckForEvent() calculates a change, so if the update loop is too slow,
+    //they could miss events
+    void buttonSetPressEvent(BUTTON b, void (*buttenEvent)(void));
+    void buttonSetReleaseEvent(BUTTON b, void (*buttenEvent)(void));
+
+    //Clear out event handlers that have been set already
+    void buttonClearPressEvent(BUTTON b) {(b<BUTTON_COUNT)?m_buttonPressEvents[b] = NULL : NULL;};
+    void buttonClearReleaseEvent(BUTTON b){(b<BUTTON_COUNT)?m_buttonReleaseEvents[b] = NULL : NULL;};
+
+    //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false.
+    bool buttonUpPressed(){ return digitalRead(PIN_UP_BUTTON); };
+    bool buttonDownPressed(){ return digitalRead(PIN_DOWN_BUTTON); };
+    bool buttonRightPressed(){ return digitalRead(PIN_RIGHT_BUTTON); };
+    bool buttonLeftPressed(){ return digitalRead(PIN_LEFT_BUTTON); };
+    bool buttonRotaryPressed(){ return !digitalRead(PIN_ROT_ENC_BUTTON); };//Hardware has this input inverted (active high)
 
     //TODO
-    //Need functions for all four buttons, rotary encoder twists and buttons
     //Need objects, functions, and test mode for IR
     //Need init way to use a reduced number of pins so some can be used for alternate functions
-    //loot at other types (float?!?) for oledPrint(ln)
-    
+    //look at other types (float?!?) for oledPrint(ln)
 
     private:
-    Encoder                 m_rotaryEncoder;
+    Encoder                 m_rotary;
     OneWire                 m_oneWire;
     MPU6050                 m_mpu;
     Adafruit_SSD1306        m_oled_display;
@@ -160,16 +187,17 @@ class NanoProtoShield {
 
     volatile byte           m_interrupt;
 
-    float                   m_temperatureC; //could use uint_16's for these and save a few bytes
-    float                   m_temperatureF;
+    float                   m_temperatureC;
 
     byte                    m_buttonState;
     byte                    m_buttonPressed;
+    byte                    m_buttonReleased;
 
-    void (*m_buttonDownEvent)();
-
+    void (*m_buttonPressEvents[BUTTON_COUNT])(void);
+    void (*m_buttonReleaseEvents[BUTTON_COUNT])(void);
 };
 
-
+int incrementValueWithMaxRollover(int value, int max);
+int decrementValueWithMaxRollover(int value, int max);
 
 #endif //#ifndef NANOPROTO_H
