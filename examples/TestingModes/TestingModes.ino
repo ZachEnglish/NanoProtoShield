@@ -66,6 +66,7 @@ void setup() {
   //attach the ISR to the UP button.
   attachInterrupt( digitalPinToInterrupt(PIN_UP_BUTTON), isrIncrementMode, FALLING );
   g_nps.buttonSetPressEvent(BUTTON_DOWN, notIsrDecrementMode);
+  g_nps.rgbSetButtonInterrupt(true);
 } //end setup()
 
 
@@ -199,9 +200,9 @@ void loop() {
       g_nps.takeTemperatureReading();
 
       g_nps.oledPrintln(F("Temperature is:"));
-      g_nps.oledPrint((String)g_nps.getTempC());
+      g_nps.oledPrint(g_nps.getTempC(),2);
       g_nps.oledPrintln(F("C"));
-      g_nps.oledPrint((String)g_nps.getTempF());
+      g_nps.oledPrint(g_nps.getTempF(),2);
       g_nps.oledPrintln(F("F"));
       g_nps.oledDisplay();
       break;
@@ -211,21 +212,21 @@ void loop() {
       g_nps.mpuUpdate();
 
       if (millis() - g_timer > 1000) { // print data every second
-        g_nps.oledPrint(F("TEMP: ")); g_nps.oledPrintln((String)g_nps.mpuGetTemp());
-        g_nps.oledPrint(F("ACC X: ")); g_nps.oledPrint((String)g_nps.mpuGetAccX());
-        g_nps.oledPrint(F("\tY: ")); g_nps.oledPrint((String)g_nps.mpuGetAccY());
-        g_nps.oledPrint(F("\tZ: ")); g_nps.oledPrintln((String)g_nps.mpuGetAccZ());
+        g_nps.oledPrint(F("TEMP: ")); g_nps.oledPrintln(g_nps.mpuGetTemp(),0);
+        g_nps.oledPrint(F("ACC X: ")); g_nps.oledPrint(g_nps.mpuGetAccX(),0);
+        g_nps.oledPrint(F(" Y: ")); g_nps.oledPrint(g_nps.mpuGetAccY(),0);
+        g_nps.oledPrint(F(" Z: ")); g_nps.oledPrintln(g_nps.mpuGetAccZ(),0);
 
-        g_nps.oledPrint(F("GYRO X: ")); g_nps.oledPrint((String)g_nps.mpuGetGyroX());
-        g_nps.oledPrint(F("\tY: ")); g_nps.oledPrint((String)g_nps.mpuGetGyroY());
-        g_nps.oledPrint(F("\tZ: ")); g_nps.oledPrintln((String)g_nps.mpuGetGyroZ());
+        g_nps.oledPrint(F("GYRO X: ")); g_nps.oledPrint(g_nps.mpuGetGyroX(),0);
+        g_nps.oledPrint(F(" Y: ")); g_nps.oledPrint(g_nps.mpuGetGyroY(),0);
+        g_nps.oledPrint(F(" Z: ")); g_nps.oledPrintln(g_nps.mpuGetGyroZ(),0);
 
-        g_nps.oledPrint(F("X:")); g_nps.oledPrint((String)g_nps.mpuGetAccAngleX());
-        g_nps.oledPrint(F("\tY:")); g_nps.oledPrintln((String)g_nps.mpuGetAccAngleY());
+        g_nps.oledPrint(F("X:")); g_nps.oledPrint(g_nps.mpuGetAccAngleX(),0);
+        g_nps.oledPrint(F(" Y:")); g_nps.oledPrintln(g_nps.mpuGetAccAngleY(),0);
 
-        g_nps.oledPrint(F("ANGLE X: ")); g_nps.oledPrint((String)g_nps.mpuGetAngleX());
-        g_nps.oledPrint(F("\tY: ")); g_nps.oledPrint((String)g_nps.mpuGetAngleY());
-        g_nps.oledPrint(F("\tZ: ")); g_nps.oledPrintln((String)g_nps.mpuGetAngleZ());
+        g_nps.oledPrint(F("ANGLE X: ")); g_nps.oledPrint(g_nps.mpuGetAngleX(),0);
+        g_nps.oledPrint(F(" Y: ")); g_nps.oledPrint(g_nps.mpuGetAngleY(),0);
+        g_nps.oledPrint(F(" Z: ")); g_nps.oledPrintln(g_nps.mpuGetAngleZ(),0);
         g_nps.oledDisplay();
         g_timer = millis();
       }
@@ -234,10 +235,10 @@ void loop() {
     case MODE_ANALOG_PRINT:
       g_nps.clearAllDisplays(DISPLAY_OLED);
 
-      g_nps.oledPrint(F("POT1(V): ")); g_nps.oledPrintln((String)g_nps.pot1Read());
-      g_nps.oledPrint(F("POT2(V): ")); g_nps.oledPrintln((String)g_nps.pot2Read());
-      g_nps.oledPrint(F("POT3(V): ")); g_nps.oledPrintln((String)g_nps.pot3Read());
-      g_nps.oledPrint(F("PHOTO(V): ")); g_nps.oledPrintln((String)g_nps.photoRead());
+      g_nps.oledPrint(F("POT1(V): ")); g_nps.oledPrintln(g_nps.pot1Read(),2);
+      g_nps.oledPrint(F("POT2(V): ")); g_nps.oledPrintln(g_nps.pot2Read(),2);
+      g_nps.oledPrint(F("POT3(V): ")); g_nps.oledPrintln(g_nps.pot3Read(),2);
+      g_nps.oledPrint(F("PHOTO(V): ")); g_nps.oledPrintln(g_nps.photoRead(),2);
       g_nps.oledDisplay();
       break;
   }//end switch
@@ -252,4 +253,5 @@ void isrIncrementMode() {
 
 void notIsrDecrementMode() {
   g_mode = decrementValueWithMaxRollover(g_mode, MODE_COUNT);
+  g_nps.interrupt();
 }

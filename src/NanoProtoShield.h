@@ -2,11 +2,11 @@
 #define NANOPROTOSHIELD_H
 
 #include "Arduino.h"
-#include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
 #include <SPI.h> //for talking to OLED display
 #include <Wire.h> //for talking to OLED display
 #include <Adafruit_GFX.h> //for talking to OLED display
 #include <Adafruit_SSD1306.h> //for talking to OLED display
+#include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
 #include <Encoder.h> //for talking to the rotary encoded
 #include <OneWire.h> //for talking to one wire devices like the temperature sensor.
     //Needed to modify the library to enable internal pull-up. See https://github.com/bigjosh/OneWireNoResistor/commit/ebba80cf61920aef399efa252826b1b59feb6589?branch=ebba80cf61920aef399efa252826b1b59feb6589&diff=split
@@ -70,30 +70,44 @@ class NanoProtoShield {
 
     void begin();
 
+    void oledDisplay(int clear_after = 0);
+    void oledClear();
+    void oledInvert(bool i) {m_oled.invertDisplay(i);}
+    size_t oledPrint(const __FlashStringHelper *f)  { m_oled.print(f); }
+    size_t oledPrint(const String &s)               { m_oled.print(s); }
+    size_t oledPrint(const char c[])                { m_oled.print(c); }
+    size_t oledPrint(char c)                        { m_oled.print(c); }
+    size_t oledPrint(unsigned char c, int b = DEC)  { m_oled.print(c,b); }
+    size_t oledPrint(int i, int b = DEC)            { m_oled.print(i,b); }
+    size_t oledPrint(unsigned int i, int b= DEC)    { m_oled.print(i,b); }
+    size_t oledPrint(long i, int b = DEC)           { m_oled.print(i,b); }
+    size_t oledPrint(unsigned long i, int b = DEC)  { m_oled.print(i,b); }
+    size_t oledPrint(double d, int digits = 2)      { m_oled.print(d,digits); }
+    size_t oledPrint(const Printable& p)            { m_oled.print(p); }
+    size_t oledPrintln(const __FlashStringHelper *f)    { m_oled.println(f); }
+    size_t oledPrintln(const String &s)                 { m_oled.println(s); }
+    size_t oledPrintln(const char c[])                  { m_oled.println(c); }
+    size_t oledPrintln(char c)                          { m_oled.println(c); }
+    size_t oledPrintln(unsigned char c, int b = DEC)    { m_oled.println(c,b); }
+    size_t oledPrintln(int i, int b = DEC)              { m_oled.println(i,b); }
+    size_t oledPrintln(unsigned int i, int b = DEC)     { m_oled.println(i,b); }
+    size_t oledPrintln(long i, int b = DEC)             { m_oled.println(i,b); }
+    size_t oledPrintln(unsigned long i, int b = DEC)    { m_oled.println(i,b); }
+    size_t oledPrintln(double d, int digits = 2)        { m_oled.println(d,digits); }
+    size_t oledPrintln(const Printable& p)              { m_oled.println(p); }
+    size_t oledPrintln(void)                            { m_oled.println(); }
+
     void rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait);
     void rgbRainbow(int wait);
     void rgbClear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
-    void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b);
+    void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b)   {m_rgb.setPixelColor( pixel % RGB_LED_COUNT, m_rgb.Color(r,g,b));};
+    void rgbSetPixelColor(uint8_t pixel, uint32_t color)                    {m_rgb.setPixelColor( pixel, color );};
     void rgbSetPixelsColor(uint8_t r, uint8_t g, uint8_t b);
-    void rgbSetPixelColor(uint8_t pixel, uint32_t color);
     void rgbSetPixelsColor(uint32_t color);
-    void rgbSetBrightness(uint8_t brightness);
-    void rgbShow();
+    void rgbSetBrightness(uint8_t brightness)   {m_rgb.setBrightness(brightness);};
+    void rgbShow() {m_rgb.show();};
     uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
-
-    void oledDisplay(int clear_after = 0);
-    void oledClear();
-    size_t oledPrint(const __FlashStringHelper *);
-    size_t oledPrint(const String &);
-    size_t oledPrint(const char[]);
-    size_t oledPrint(char);
-    size_t oledPrint(const Printable&);
-    size_t oledPrintln(const __FlashStringHelper *);
-    size_t oledPrintln(const String &s);
-    size_t oledPrintln(const char[]);
-    size_t oledPrintln(char);
-    size_t oledPrintln(const Printable&);
-    size_t oledPrintln(void);
+    void rgbSetButtonInterrupt(bool interrupt) {m_rgbInterrupt = interrupt;};
 
     float pot1Read() {return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;}
     float pot2Read() {return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;}
@@ -102,8 +116,6 @@ class NanoProtoShield {
 
     int rotaryRead() {return m_rotary.read()/4;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
     void rotaryWrite(int value) {m_rotary.write(value*4);}
-
-    void mpuCalculateOffsets(int wait);
 
     void shift7segWrite(byte left, byte right);
     void shift7segWrite(uint8_t num);
@@ -119,19 +131,20 @@ class NanoProtoShield {
     float getTempC() {return m_temperatureC;}
     float getTempF() {return ((m_temperatureC * 1.8f) + 32.0f) ;}
 
-    void mpuUpdate();
-    float mpuGetTemp(){ return m_mpu.getTemp(); };
-    float mpuGetAccX(){ return m_mpu.getAccX(); };
-    float mpuGetAccY(){ return m_mpu.getAccY(); };
-    float mpuGetAccZ(){ return m_mpu.getAccZ(); };
-    float mpuGetGyroX(){ return m_mpu.getGyroX(); };
-    float mpuGetGyroY(){ return m_mpu.getGyroY(); };
-    float mpuGetGyroZ(){ return m_mpu.getGyroZ(); };
-    float mpuGetAccAngleX(){ return m_mpu.getAccAngleX(); };
-    float mpuGetAccAngleY(){ return m_mpu.getAccAngleY(); };//yup, no Z
-    float mpuGetAngleX(){ return m_mpu.getAngleX(); };
-    float mpuGetAngleY(){ return m_mpu.getAngleY(); };
-    float mpuGetAngleZ(){ return m_mpu.getAngleZ(); };
+    void mpuCalculateOffsets(int wait);
+    void mpuUpdate() {m_mpu.update();}
+    float mpuGetTemp(){ return m_mpu.getTemp(); }
+    float mpuGetAccX(){ return m_mpu.getAccX(); }
+    float mpuGetAccY(){ return m_mpu.getAccY(); }
+    float mpuGetAccZ(){ return m_mpu.getAccZ(); }
+    float mpuGetGyroX(){ return m_mpu.getGyroX(); }
+    float mpuGetGyroY(){ return m_mpu.getGyroY(); }
+    float mpuGetGyroZ(){ return m_mpu.getGyroZ(); }
+    float mpuGetAccAngleX(){ return m_mpu.getAccAngleX(); }
+    float mpuGetAccAngleY(){ return m_mpu.getAccAngleY(); }//yup, no Z
+    float mpuGetAngleX(){ return m_mpu.getAngleX(); }
+    float mpuGetAngleY(){ return m_mpu.getAngleY(); }
+    float mpuGetAngleZ(){ return m_mpu.getAngleZ(); }
 
     void interrupt();
 
@@ -162,23 +175,25 @@ class NanoProtoShield {
     void buttonClearPressEvent(BUTTON b) {(b<BUTTON_COUNT)?m_buttonPressEvents[b] = NULL : NULL;};
     void buttonClearReleaseEvent(BUTTON b){(b<BUTTON_COUNT)?m_buttonReleaseEvents[b] = NULL : NULL;};
 
-    //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false.
-    bool buttonUpPressed(){ return digitalRead(PIN_UP_BUTTON); };
-    bool buttonDownPressed(){ return digitalRead(PIN_DOWN_BUTTON); };
-    bool buttonRightPressed(){ return digitalRead(PIN_RIGHT_BUTTON); };
-    bool buttonLeftPressed(){ return digitalRead(PIN_LEFT_BUTTON); };
-    bool buttonRotaryPressed(){ return !digitalRead(PIN_ROT_ENC_BUTTON); };//Hardware has this input inverted (active high)
+    //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
+    bool buttonUpPressed(){ return digitalRead(PIN_UP_BUTTON); }
+    bool buttonDownPressed(){ return digitalRead(PIN_DOWN_BUTTON); }
+    bool buttonRightPressed(){ return digitalRead(PIN_RIGHT_BUTTON); }
+    bool buttonLeftPressed(){ return digitalRead(PIN_LEFT_BUTTON); }
+    bool buttonRotaryPressed(){ return !digitalRead(PIN_ROT_ENC_BUTTON); }//Hardware has this input inverted (active high)
 
     //TODO
     //Need objects, functions, and test mode for IR
     //Need init way to use a reduced number of pins so some can be used for alternate functions
     //look at other types (float?!?) for oledPrint(ln)
+    //make way for button check to interrupt rgb functions
+    //RGB class??
 
     private:
+    Adafruit_SSD1306        m_oled;
     Encoder                 m_rotary;
     OneWire                 m_oneWire;
     MPU6050                 m_mpu;
-    Adafruit_SSD1306        m_oled_display;
     Adafruit_NeoPixel       m_rgb;
 
     byte                    m_shift7segLeft;
@@ -186,6 +201,7 @@ class NanoProtoShield {
     byte                    m_shiftLed;
 
     volatile byte           m_interrupt;
+    bool                    m_rgbInterrupt;
 
     float                   m_temperatureC;
 

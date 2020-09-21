@@ -29,7 +29,7 @@ NanoProtoShield::NanoProtoShield() :
   m_rotary(PIN_ROT_ENC_B, PIN_ROT_ENC_A), //this order makes clockwise positive on the NPS
   m_oneWire(PIN_TEMPERATURE),
   m_mpu(Wire),
-  m_oled_display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
+  m_oled(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
   m_rgb(RGB_LED_COUNT,PIN_RGB_LED, NEO_GRB + NEO_KHZ800)
   //m_button_left(PIN_LEFT_BUTTON),
   //m_button_right(PIN_RIGHT_BUTTON)
@@ -69,13 +69,13 @@ void NanoProtoShield::begin(){
     m_rgb.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
 
     // Set up the OLED display
-    if (!m_oled_display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    if (!m_oled.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
       Serial.println(F("SSD1306 allocation failed"));
       for (;;); // Don't proceed, loop forever
     }
     
-    m_oled_display.setTextSize(1);
-    m_oled_display.setTextColor(SSD1306_WHITE);
+    m_oled.setTextSize(1);
+    m_oled.setTextColor(SSD1306_WHITE);
 
     memset(g_RGB_data, 0x00, sizeof(g_RGB_data));
 
@@ -93,6 +93,8 @@ void NanoProtoShield::rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait) {
   for (int i = 0; i < m_rgb.numPixels(); i++) { // For each pixel in strip...
     m_rgb.setPixelColor(i, color);         //  Set pixel's color (in RAM)
     m_rgb.show();                          //  Update strip to match
+    if(m_rgbInterrupt)
+      buttonCheckForEvent();
     if(m_interrupt != starting_interrupt)
       return;
     delay(wait);                           //  Pause for a moment
@@ -120,6 +122,8 @@ void NanoProtoShield::rgbRainbow(int wait) {
       m_rgb.setPixelColor(i, m_rgb.gamma32(m_rgb.ColorHSV(pixelHue)));
     }
     m_rgb.show(); // Update strip with new contents
+    if(m_rgbInterrupt)
+      buttonCheckForEvent();
     if(m_interrupt != starting_interrupt)
       return;
     delay(wait);  // Pause for a moment
@@ -132,17 +136,9 @@ void NanoProtoShield::rgbClear() {
   m_rgb.show();
 }
 
-void NanoProtoShield::rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b){
-  m_rgb.setPixelColor( pixel % RGB_LED_COUNT, m_rgb.Color(r,g,b));
-}
-
 void NanoProtoShield::rgbSetPixelsColor(uint8_t r, uint8_t g, uint8_t b){
   for(int i = 0; i < RGB_LED_COUNT; i++)
     rgbSetPixelColor(i,r,g,b);
-}
-
-void NanoProtoShield::rgbSetPixelColor(uint8_t pixel, uint32_t color){
-  m_rgb.setPixelColor( pixel, color );
 }
 
 void NanoProtoShield::rgbSetPixelsColor(uint32_t color){
@@ -150,71 +146,19 @@ void NanoProtoShield::rgbSetPixelsColor(uint32_t color){
     rgbSetPixelColor(i,color);
 }
 
-void NanoProtoShield::rgbSetBrightness(uint8_t brightness){
-  m_rgb.setBrightness(brightness);
-}
-
-void NanoProtoShield::rgbShow(){
-  m_rgb.show();
-}
-
 void NanoProtoShield::oledDisplay(int clear_after = 0) {
-  m_oled_display.display();
+  m_oled.display();
 
   if(clear_after > 0)
   {
     delay(clear_after);
-    m_oled_display.clearDisplay();
+    m_oled.clearDisplay();
   }
 }
 
 void NanoProtoShield::oledClear() {
-  m_oled_display.clearDisplay();
-  m_oled_display.setCursor(0, 0);
-}
-
-size_t NanoProtoShield::oledPrint(const __FlashStringHelper *c) {
-  return m_oled_display.print(c);
-}
-
-size_t NanoProtoShield::oledPrint(const String &c) {
-  return m_oled_display.print(c);
-}
-
-size_t NanoProtoShield::oledPrint(const char c[]) {
-  return m_oled_display.print(c);
-}
-
-size_t NanoProtoShield::oledPrint(char c) {
-  return m_oled_display.print(c);
-}
-
-size_t NanoProtoShield::oledPrint(const Printable& c) {
-  return m_oled_display.print(c);
-}
-
-size_t NanoProtoShield::oledPrintln(const __FlashStringHelper *c) {
-  return m_oled_display.println(c);
-}
-
-size_t NanoProtoShield::oledPrintln(const String &s) {
-  return m_oled_display.println(s);
-}
-
-size_t NanoProtoShield::oledPrintln(const char c[]) {
-  return m_oled_display.println(c);
-}
-
-size_t NanoProtoShield::oledPrintln(char c) {
-  return m_oled_display.println(c);
-}
-
-size_t NanoProtoShield::oledPrintln(const Printable& c) {
-  return m_oled_display.println(c);
-}
-
-size_t NanoProtoShield::oledPrintln(void) {
-  return m_oled_display.println();
+  m_oled.clearDisplay();
+  m_oled.setCursor(0, 0);
 }
 
 void NanoProtoShield::shift7segWrite(byte left, byte right){
@@ -315,9 +259,9 @@ void NanoProtoShield::clearAllDisplays(DISPLAYS exceptions = DISPLAY_NONE){
   if ( !(exceptions & DISPLAY_SHIFT_7SEG) ) {
     shift7segWrite(0x00,0x00);
   }
-  oledClear();
+  m_oled.clearDisplay();
   if (!(exceptions & DISPLAY_OLED) ) {
-    oledDisplay();
+    m_oled.display();
   }
   if ( !(exceptions & DISPLAY_RGB_LEDS) ) {
     rgbClear();
@@ -328,10 +272,6 @@ void NanoProtoShield::mpuCalculateOffsets(int wait){
   m_mpu.begin();
   delay(wait);
   m_mpu.calcGyroOffsets();
-}
-
-void NanoProtoShield::mpuUpdate(){
-  m_mpu.update();
 }
 
 void NanoProtoShield::buttonCheckForEvent(){
