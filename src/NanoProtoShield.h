@@ -53,12 +53,13 @@
 #define VOLTAGE_TO_RGB (255.0 / 5.0)
 
 enum DISPLAYS { 
+    DISPLAY_NONE        = 0,
     DISPLAY_RGB_LEDS    = bit(0),
     DISPLAY_SHIFT_LEDS  = bit(1),
     DISPLAY_SHIFT_7SEG  = bit(2),
     DISPLAY_OLED        = bit(3)
     };
-#define DISPLAY_NONE 0
+//#define DISPLAY_NONE 0
 
 enum BUTTON { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_ROTARY, BUTTON_COUNT };
 

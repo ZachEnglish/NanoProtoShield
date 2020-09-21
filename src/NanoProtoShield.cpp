@@ -259,8 +259,8 @@ void NanoProtoShield::clearAllDisplays(DISPLAYS exceptions = DISPLAY_NONE){
   if ( !(exceptions & DISPLAY_SHIFT_7SEG) ) {
     shift7segWrite(0x00,0x00);
   }
-  m_oled.clearDisplay();
-  if (!(exceptions & DISPLAY_OLED) ) {
+  if ( !(exceptions & DISPLAY_OLED) ) {
+    m_oled.clearDisplay();
     m_oled.display();
   }
   if ( !(exceptions & DISPLAY_RGB_LEDS) ) {
