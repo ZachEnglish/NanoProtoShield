@@ -152,6 +152,7 @@ void loop() {
         g_7segAlpha = decrementValueWithMaxRollover(g_7segAlpha, 256);
 
       g_nps.shift7segWriteHex(g_7segAlpha);
+      g_nps.oledClear();
       g_nps.oledPrint(g_7segAlpha + 0.0f);
       g_nps.oledDisplay();
       break;
@@ -166,6 +167,7 @@ void loop() {
         g_7segAlpha = decrementValueWithMaxRollover(g_7segAlpha, 100);
 
       g_nps.shift7segWrite(g_7segAlpha);
+      g_nps.oledClear();
       g_nps.oledPrint(g_7segAlpha + 0.0f);
       g_nps.oledDisplay();
       break;
@@ -182,6 +184,7 @@ void loop() {
     case MODE_OLED_HELLO_WORLD:
       g_nps.clearAllDisplays(DISPLAY_OLED);
 
+      g_nps.oledClear();
       g_nps.oledPrint(F("Hello world!"));
       g_nps.oledDisplay();
       break;
@@ -189,6 +192,7 @@ void loop() {
     case MODE_OLED_LOVE_MY_WIFE:
       g_nps.clearAllDisplays(DISPLAY_OLED);
 
+      g_nps.oledClear();
       g_nps.oledPrintln(F("I enjoy this!"));
       g_nps.oledPrintln(F("I love my wife!"));
       g_nps.oledDisplay();
@@ -199,6 +203,7 @@ void loop() {
 
       g_nps.takeTemperatureReading();
 
+      g_nps.oledClear();
       g_nps.oledPrintln(F("Temperature is:"));
       g_nps.oledPrint(g_nps.getTempC(),2);
       g_nps.oledPrintln(F("C"));
@@ -212,6 +217,7 @@ void loop() {
       g_nps.mpuUpdate();
 
       if (millis() - g_timer > 1000) { // print data every second
+        g_nps.oledClear();
         g_nps.oledPrint(F("TEMP: ")); g_nps.oledPrintln(g_nps.mpuGetTemp(),0);
         g_nps.oledPrint(F("ACC X: ")); g_nps.oledPrint(g_nps.mpuGetAccX(),0);
         g_nps.oledPrint(F(" Y: ")); g_nps.oledPrint(g_nps.mpuGetAccY(),0);
@@ -235,6 +241,7 @@ void loop() {
     case MODE_ANALOG_PRINT:
       g_nps.clearAllDisplays(DISPLAY_OLED);
 
+      g_nps.oledClear();
       g_nps.oledPrint(F("POT1(V): ")); g_nps.oledPrintln(g_nps.pot1Read(),2);
       g_nps.oledPrint(F("POT2(V): ")); g_nps.oledPrintln(g_nps.pot2Read(),2);
       g_nps.oledPrint(F("POT3(V): ")); g_nps.oledPrintln(g_nps.pot3Read(),2);
