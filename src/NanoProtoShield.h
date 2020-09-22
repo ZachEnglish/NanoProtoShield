@@ -49,8 +49,8 @@
 #define OLED_ADDRESS 0x3C
 
 
-#define ANALOG_TO_VOLTAGE (5.0 / 1023.0)
-#define VOLTAGE_TO_RGB (255.0 / 5.0)
+#define ANALOG_TO_VOLTAGE (5.0 / 1023.0) //Multiply by to convert an analog reading to voltage level
+#define VOLTAGE_TO_RGB (255.0 / 5.0) //Multiply by to convert a voltage to an RGB value (0-255)
 
 enum DISPLAYS { 
     DISPLAY_NONE        = 0,
@@ -59,16 +59,20 @@ enum DISPLAYS {
     DISPLAY_SHIFT_7SEG  = bit(2),
     DISPLAY_OLED        = bit(3)
     };
-//#define DISPLAY_NONE 0
 
 enum BUTTON { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_ROTARY, BUTTON_COUNT };
 
 //Declare class object to abstract and hide many of the complexities of the board
 class NanoProtoShield {
     public:
-
+    
+    //Class constructor. Initializes all the member classes except for the temperature one because we can
+    //save the RAM from having that one always allocated by just putting it on the stack when we want to
+    //take a reading.
     NanoProtoShield();
 
+    //begin() should be called in the setup() part of any script that uses a global NanoProtoShield object.
+    //Sets up all the I/O pins and begins the member classes and prepares them for use.
     void begin();
 
     void oledDisplay(int clear_after = 0);
@@ -98,36 +102,65 @@ class NanoProtoShield {
     size_t oledPrintln(const Printable& p)              { m_oled.println(p); }
     size_t oledPrintln(void)                            { m_oled.println(); }
 
+    // Fill strip pixels one after another with a color. Strip is NOT cleared
+    // first; anything there will be covered pixel by pixel. Pause for 'wait'
+    // amount of time between each pixel. Can be interrupted by a
+    // NanoProtoShield::interrupt() call or a button event if m_rgbInterrupt
+    // is set to true (via NanoProtoShield::rgbSetButtonInterrupt)
     void rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait);
+    // Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+    // Can be interrupted by a NanoProtoShield::interrupt() call or a button
+    // event if m_rgbInterrupt is set to true (via NanoProtoShield::rgbSetButtonInterrupt)
     void rgbRainbow(int wait);
-    void rgbClear(); //ZDE: Debating if this should be here or if it hides the underlying class too much
+    //Clears the RGB LED strip and calls show so that the changes are seen
+    void rgbClear();
     void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b)   {m_rgb.setPixelColor( pixel % RGB_LED_COUNT, m_rgb.Color(r,g,b));};
     void rgbSetPixelColor(uint8_t pixel, uint32_t color)                    {m_rgb.setPixelColor( pixel, color );};
+    //Set the color of all the pixels
     void rgbSetPixelsColor(uint8_t r, uint8_t g, uint8_t b);
     void rgbSetPixelsColor(uint32_t color);
     void rgbSetBrightness(uint8_t brightness)   {m_rgb.setBrightness(brightness);};
     void rgbShow() {m_rgb.show();};
     uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
+    //Set to true if you want the RGB color wipe and rainbow functions to check for button events
+    //Not doing this makes non-interrupt driven (anything other than the UP button) button presses
+    //very easy to miss.
     void rgbSetButtonInterrupt(bool interrupt) {m_rgbInterrupt = interrupt;};
 
     float pot1Read() {return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;}
     float pot2Read() {return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;}
     float pot3Read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
-    float photoRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
+    float lightMeterRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
     int rotaryRead() {return m_rotary.read()/4;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
     void rotaryWrite(int value) {m_rotary.write(value*4);}
 
+    //Wrtine left and right out to the 7 segment display digits
+    //These are raw bytes, so they follow the formatting described where
+    //g_map_7seg is defined in NanoProtoShield.cpp
     void shift7segWrite(byte left, byte right);
-    void shift7segWrite(uint8_t num);
-    void shift7segWriteHex(uint8_t num);
+    //Prints a number to the 7 segment display. Can handle 0-255 by
+    //using the decimal places to indicate 100 or 200
+    void shift7segPrint(uint8_t num);
+    //Prints a two digit hex number to the 7 segment display
+    void shift7segPrintHex(uint8_t num);
+    byte shift7segLeftRead() {return ~m_shift7segLeft;}
+    byte shift7segRightRead() {return ~m_shift7segRight;}
+    //Shift out b to the single color LEDs. Stores what was shifted
+    //so when the 7 segmenet display is also used it does not get
+    //lost or erased (since both of those are in series in HW).
     void shiftLedWrite(byte b);
-    byte shift7segLeftRead();
-    byte shift7segRightRead();
-    byte shiftLedRead();
+    byte shiftLedRead() {return m_shiftLed;}
+    //Clear out everything shift register related, the 7 segment display
+    //and the 8 single color LEDs
     void shiftClear();
+    //Go through a test pattern on the shift register displays
     void shiftTestSequence(int wait);
 
+    //Takes a temperature reading and stores it for retrieval later.
+    //Puts the DallasTemperature object on the stack to save RAM
+    //Not a super fast function because of that initialization that
+    //takes place, so don't call it in any tight loop
     void takeTemperatureReading();
     float getTempC() {return m_temperatureC;}
     float getTempF() {return ((m_temperatureC * 1.8f) + 32.0f) ;}
@@ -147,8 +180,13 @@ class NanoProtoShield {
     float mpuGetAngleY(){ return m_mpu.getAngleY(); }
     float mpuGetAngleZ(){ return m_mpu.getAngleZ(); }
 
-    void interrupt();
+    //Calling interrupt let's the NanoProtoShield know that any function which may take a while (e.g. RGB sequences) should
+    //check to see if they need to do an early abort. This allows for a faster UI response when using buttons for navigation
+    void interrupt() {m_interrupt++;}
 
+    //Clears all the displays on the NanoProtoShield. Can set an exception
+    //so a display does not flash when it is in use yet it is desired to
+    //ensure the rest of the displays are cleared out.
     void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
 
     //buttonCheckForEvent must be called regularly (e.g. in the loop function) for the event system to work. This will call

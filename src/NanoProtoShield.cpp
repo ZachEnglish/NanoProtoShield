@@ -1,7 +1,17 @@
 #include "Arduino.h"
 #include "NanoProtoShield.h"
 
-
+//Mapping for 7 segment display.
+// AAAAAAA
+// F     B
+// F     B
+//  GGGGG
+// E     C
+// E     C
+// DDDDDDD dp
+//
+// bit                8 7654321
+// byte packed -> 0b(dp)GFEDCBA
 const byte g_map_7seg[] PROGMEM = {
   0b00111111, //0
   0b00000110, //1
@@ -20,10 +30,10 @@ const byte g_map_7seg[] PROGMEM = {
   0b01111001, //E
   0b01110001  //F
 };
-
+//7segment decimal point
+//Can be bitwise 'or'ed (single '|') together with the other segments in the g_map_7seg to add the decimal point
 #define DEC_7SEG 0b10000000
 
-uint32_t g_RGB_data[8];
 
 NanoProtoShield::NanoProtoShield() :
   m_rotary(PIN_ROT_ENC_B, PIN_ROT_ENC_A), //this order makes clockwise positive on the NPS
@@ -31,16 +41,14 @@ NanoProtoShield::NanoProtoShield() :
   m_mpu(Wire),
   m_oled(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET),
   m_rgb(RGB_LED_COUNT,PIN_RGB_LED, NEO_GRB + NEO_KHZ800)
-  //m_button_left(PIN_LEFT_BUTTON),
-  //m_button_right(PIN_RIGHT_BUTTON)
   {
     //Initialize the class's memory of what data the shift registers have
     m_shift7segLeft  = 0xFF;
     m_shift7segRight = 0xFF;
-    m_shiftLed        = 0x00;
-    m_interrupt        = 0;
-    m_buttonState     = 0;
-    m_buttonPressed   = 0;
+    m_shiftLed       = 0x00;
+    m_interrupt      = 0;
+    m_buttonState    = 0;
+    m_buttonPressed  = 0;
 
     for(int i = 0; i < BUTTON_COUNT; i++){
       m_buttonPressEvents[i] = NULL;
@@ -69,6 +77,8 @@ void NanoProtoShield::begin(){
     m_rgb.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
 
     // Set up the OLED display
+    // This begin() call tries to put 1024 bytes on the stack for the display buffer, which
+    // is half of the entire stack! Easy to blow it.
     if (!m_oled.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
       Serial.println(F("SSD1306 allocation failed"));
       for (;;); // Don't proceed, loop forever
@@ -77,16 +87,10 @@ void NanoProtoShield::begin(){
     m_oled.setTextSize(1);
     m_oled.setTextColor(SSD1306_WHITE);
 
-    memset(g_RGB_data, 0x00, sizeof(g_RGB_data));
-
     clearAllDisplays();
 }
 
-// Fill strip pixels one after another with a color. Strip is NOT cleared
-// first; anything there will be covered pixel by pixel. Pass in color
-// (as a single 'packed' 32-bit value, which you can get by calling
-// strip.Color(red, green, blue) as shown in the loop() function above),
-// and a delay time (in milliseconds) between pixels.
+
 void NanoProtoShield::rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait) {
   uint8_t starting_interrupt = m_interrupt;
   uint32_t color = m_rgb.Color(r,g,b);
@@ -101,7 +105,6 @@ void NanoProtoShield::rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait) {
   }
 }
 
-// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
 void NanoProtoShield::rgbRainbow(int wait) {
   uint8_t starting_interrupt = m_interrupt;
   // Hue of first pixel runs 5 complete loops through the color wheel.
@@ -131,7 +134,6 @@ void NanoProtoShield::rgbRainbow(int wait) {
 }
 
 void NanoProtoShield::rgbClear() {
-  memset(g_RGB_data, 0x00, sizeof(g_RGB_data));
   m_rgb.clear();
   m_rgb.show();
 }
@@ -145,6 +147,7 @@ void NanoProtoShield::rgbSetPixelsColor(uint32_t color){
   for(int i = 0; i < RGB_LED_COUNT; i++)
     rgbSetPixelColor(i,color);
 }
+
 
 void NanoProtoShield::oledDisplay(int clear_after = 0) {
   m_oled.display();
@@ -161,6 +164,7 @@ void NanoProtoShield::oledClear() {
   m_oled.setCursor(0, 0);
 }
 
+
 void NanoProtoShield::shift7segWrite(byte left, byte right){
   //invert the input because the 7 segment leds are active low
   m_shift7segLeft = ~left;
@@ -172,7 +176,7 @@ void NanoProtoShield::shift7segWrite(byte left, byte right){
   digitalWrite(PIN_SHIFT_LATCH, HIGH);
 }
 
-void NanoProtoShield::shift7segWrite(uint8_t num){
+void NanoProtoShield::shift7segPrint(uint8_t num){
   byte left, right;
   right = num % 10;
   right = pgm_read_byte_near(g_map_7seg + right) | ((num>=100)?DEC_7SEG:0x00); //get the digit and determine if the decimal is needed
@@ -182,7 +186,7 @@ void NanoProtoShield::shift7segWrite(uint8_t num){
   shift7segWrite(left, right);
 }
 
-void NanoProtoShield::shift7segWriteHex(uint8_t num){
+void NanoProtoShield::shift7segPrintHex(uint8_t num){
   byte left, right;
   right = num & 0x0F;
   left = (num & 0xF0)>>4;
@@ -197,18 +201,6 @@ void NanoProtoShield::shiftLedWrite(byte b){
   shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift7segLeft);
   shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shiftLed);
   digitalWrite(PIN_SHIFT_LATCH, HIGH);
-}
-
-byte NanoProtoShield::shift7segLeftRead(){
-  return ~m_shift7segLeft;
-}
-
-byte NanoProtoShield::shift7segRightRead(){
-  return ~m_shift7segRight;
-}
-
-byte NanoProtoShield::shiftLedRead(){
-  return m_shiftLed;
 }
 
 void NanoProtoShield::shiftClear(){
@@ -238,19 +230,17 @@ void NanoProtoShield::shiftTestSequence(int wait){
   shiftClear();
 }
 
+
 void NanoProtoShield::takeTemperatureReading(){
-  DallasTemperature temp_sensor(&m_oneWire);
+  DallasTemperature tempSensor(&m_oneWire);
     
   //Start up the temperature sensor library
-  temp_sensor.begin();
+  tempSensor.begin();
 
-  temp_sensor.requestTemperatures();
-  m_temperatureC = temp_sensor.getTempCByIndex(0);
+  tempSensor.requestTemperatures();
+  m_temperatureC = tempSensor.getTempCByIndex(0);
 }
 
-void NanoProtoShield::interrupt(){
-  m_interrupt++;
-}
 
 void NanoProtoShield::clearAllDisplays(DISPLAYS exceptions = DISPLAY_NONE){
   if ( !(exceptions & DISPLAY_SHIFT_LEDS) ) {

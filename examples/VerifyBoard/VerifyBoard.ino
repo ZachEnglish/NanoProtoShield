@@ -49,7 +49,7 @@ void loop(){
     g_counter++;
     
     //print "'Up' for next(#/#)"
-    if(!skipOled || isFirstTime){
+    if(isFirstTime || !skipOled){
         g_nps.oledClear();
         g_nps.oledPrint(F("'Up' for next ("));
         g_nps.oledPrint(g_currentTest + 1);
@@ -66,14 +66,14 @@ void loop(){
 
         case TEST_7SEG:
             setUpTest( F("7 Segment LEDs"), F("Counting up in hex."), true, DISPLAY_SHIFT_7SEG );
-            g_nps.shift7segWriteHex(g_counter);
+            g_nps.shift7segPrintHex(g_counter);
             break;
 
         case TEST_7SEG_FAST:
             if(isFirstTime) {
                 setUpTest(F("7 Segment LEDs"), F("Counting up in hex without redrawing the OLED."), true, DISPLAY_SHIFT_7SEG );
             }
-            g_nps.shift7segWriteHex(g_counter);
+            g_nps.shift7segPrintHex(g_counter);
             break;
 
         case TEST_SHIFT_LEDS:
@@ -105,7 +105,7 @@ void loop(){
             }
             if(g_nps.buttonRotaryPressed())
                 g_nps.rotaryWrite(0);
-            g_nps.shift7segWriteHex(g_nps.rotaryRead());
+            g_nps.shift7segPrintHex(g_nps.rotaryRead());
             //TODO Not working well... why?!? Too much BUS I/O the Encoder is missing twists?
             break;
 
@@ -119,7 +119,7 @@ void loop(){
 
         case TEST_LIGHT_SENSE:
             setUpTest(F("Light sensor"), F("LEDs serve as light level indicator"), true, DISPLAY_SHIFT_LEDS);
-            lightLevel =  g_nps.photoRead();
+            lightLevel =  g_nps.lightMeterRead();
             whichBit = lightLevel * 8.0f / 5.0f;
             g_nps.shiftLedWrite(1 << whichBit);
             break;
