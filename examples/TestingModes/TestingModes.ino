@@ -151,7 +151,7 @@ void loop() {
       if (g_nps.buttonPressed(BUTTON_LEFT))
         g_7segAlpha = decrementValueWithMaxRollover(g_7segAlpha, 256);
 
-      g_nps.shift7segWriteHex(g_7segAlpha);
+      g_nps.shift7segPrintHex(g_7segAlpha);
       g_nps.oledClear();
       g_nps.oledPrint(g_7segAlpha + 0.0f);
       g_nps.oledDisplay();
@@ -166,7 +166,7 @@ void loop() {
       if (g_nps.buttonPressed(BUTTON_LEFT))
         g_7segAlpha = decrementValueWithMaxRollover(g_7segAlpha, 100);
 
-      g_nps.shift7segWrite(g_7segAlpha);
+      g_nps.shift7segPrint(g_7segAlpha);
       g_nps.oledClear();
       g_nps.oledPrint(g_7segAlpha + 0.0f);
       g_nps.oledDisplay();
@@ -245,7 +245,7 @@ void loop() {
       g_nps.oledPrint(F("POT1(V): ")); g_nps.oledPrintln(g_nps.pot1Read(),2);
       g_nps.oledPrint(F("POT2(V): ")); g_nps.oledPrintln(g_nps.pot2Read(),2);
       g_nps.oledPrint(F("POT3(V): ")); g_nps.oledPrintln(g_nps.pot3Read(),2);
-      g_nps.oledPrint(F("PHOTO(V): ")); g_nps.oledPrintln(g_nps.photoRead(),2);
+      g_nps.oledPrint(F("PHOTO(V): ")); g_nps.oledPrintln(g_nps.lightMeterRead(),2);
       g_nps.oledDisplay();
       break;
   }//end switch

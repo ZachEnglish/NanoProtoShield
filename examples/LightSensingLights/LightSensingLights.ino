@@ -12,7 +12,7 @@ void setup() {
 }
 
 void loop() {
-  float lightLevel =  g_nps.photoRead();
+  float lightLevel =  g_nps.lightMeterRead();
   byte whichBit = lightLevel * 8.0f / 5.0f;
 
   g_nps.shiftLedWrite(1 << whichBit);

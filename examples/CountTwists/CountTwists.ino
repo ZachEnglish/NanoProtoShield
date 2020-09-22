@@ -13,5 +13,5 @@ void setup() {
 }
 
 void loop() {
-  g_nps.shift7segWrite(g_nps.rotaryRead());
+  g_nps.shift7segPrint(g_nps.rotaryRead());
 }
