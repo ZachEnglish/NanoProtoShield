@@ -1,3 +1,7 @@
+//This example is used to verify that the HW is fully functional. Goes through several test modes
+//by using the 'up' button to transition between them. Uses the OLED to give a brief description
+//of the current test.
+
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;
