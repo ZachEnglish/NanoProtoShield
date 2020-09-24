@@ -94,12 +94,9 @@ void loop(){
 
         case TEST_BUTTONS:
             setUpTest(F("Button test"),NULL,false);
-            g_nps.oledPrint(F("LEFT :"));
-            g_nps.oledPrintln(g_nps.buttonLeftPressed()?F("Pressed"):F("Released"));
-            g_nps.oledPrint(F("RIGHT:"));
-            g_nps.oledPrintln(g_nps.buttonRightPressed()?F("Pressed"):F("Released"));
-            g_nps.oledPrint(F("DOWN :"));
-            g_nps.oledPrintln(g_nps.buttonDownPressed()?F("Pressed"):F("Released"));
+            printButtonState(F("LEFT :"),  g_nps.buttonLeftPressed());
+            printButtonState(F("RIGHT :"), g_nps.buttonRightPressed());
+            printButtonState(F("DOWN :"),  g_nps.buttonDownPressed());
             g_nps.oledDisplay();
             break;
 
@@ -110,7 +107,7 @@ void loop(){
             if(g_nps.buttonRotaryPressed())
                 g_nps.rotaryWrite(0);
             g_nps.shift7segPrintHex(g_nps.rotaryRead());
-            //TODO Not working well... why?!? Too much BUS I/O the Encoder is missing twists?
+            //TODO Not working well... why?!? Too much BUS I/O the Encoder is missing twists? Much better skipping OLED drawing
             break;
 
         case TEST_POTS:
@@ -168,4 +165,9 @@ void setUpTest(const __FlashStringHelper *title, const __FlashStringHelper *desc
         g_nps.oledPrintln(desciption);
     if(doDisplay)
         g_nps.oledDisplay();
+}
+
+void printButtonState(const __FlashStringHelper *name, bool pressed) {
+    g_nps.oledPrint(name);
+    g_nps.oledPrintln(pressed?F("Pressed"):F("Released"));
 }
