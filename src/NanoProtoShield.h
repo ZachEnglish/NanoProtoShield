@@ -7,9 +7,8 @@
 #include <Adafruit_GFX.h> //for talking to OLED display
 #include <Adafruit_SSD1306.h> //for talking to OLED display
 #include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
-#include <Encoder.h> //for talking to the rotary encoded
+#include <Encoder.h> //for talking to the rotary encoded. Try ClickEncoder?
 #include <OneWire.h> //for talking to one wire devices like the temperature sensor.
-    //Needed to modify the library to enable internal pull-up. See https://github.com/bigjosh/OneWireNoResistor/commit/ebba80cf61920aef399efa252826b1b59feb6589?branch=ebba80cf61920aef399efa252826b1b59feb6589&diff=split
 #include <DallasTemperature.h> //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
 
@@ -52,6 +51,7 @@
 #define ANALOG_TO_VOLTAGE (5.0 / 1023.0) //Multiply by to convert an analog reading to voltage level
 #define VOLTAGE_TO_RGB (255.0 / 5.0) //Multiply by to convert a voltage to an RGB value (0-255)
 
+
 enum DISPLAYS { 
     DISPLAY_NONE        = 0,
     DISPLAY_RGB_LEDS    = bit(0),
@@ -62,14 +62,44 @@ enum DISPLAYS {
 
 enum BUTTON { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_ROTARY, BUTTON_COUNT };
 
+enum FEATURES {
+    FEATURE_NONE            = 0, //please tell me why you are using this
+    FEATURE_OLED            = bit(0),
+    FEATURE_ROTARY_TWIST    = bit(1),
+    FEATURE_ROT_ENC_BUTTON  = bit(2),
+    FEATURE_MPU             = bit(3),
+    FEATURE_RGB             = bit(4),
+    FEATURE_SHIFTS          = bit(5),
+    FEATURE_BUTTON_UP       = bit(6),
+    FEATURE_BUTTON_DOWN     = bit(7),
+    FEATURE_BUTTON_LEFT     = bit(8),
+    FEATURE_BUTTON_RIGHT    = bit(9),
+    FEATURE_IR_TX           = bit(10),
+    FEATURE_IR_RX           = bit(11)
+    };
+#define FEATURE_ALL (FEATURE_OLED           | \
+                     FEATURE_ROTARY_TWIST   | \
+                     FEATURE_ROT_ENC_BUTTON | \
+                     FEATURE_MPU            | \
+                     FEATURE_RGB            | \
+                     FEATURE_SHIFTS         | \
+                     FEATURE_BUTTON_UP      | \
+                     FEATURE_BUTTON_DOWN    | \
+                     FEATURE_BUTTON_LEFT    | \
+                     FEATURE_BUTTON_RIGHT   | \
+                     FEATURE_IR_TX          | \
+                     FEATURE_IR_RX)
+
+
 //Declare class object to abstract and hide many of the complexities of the board
 class NanoProtoShield {
     public:
     
-    //Class constructor. Initializes all the member classes except for the temperature one because we can
-    //save the RAM from having that one always allocated by just putting it on the stack when we want to
-    //take a reading.
-    NanoProtoShield();
+    //Class constructor. Initializes all the member classes identified by the features list passed in
+    //except for the temperature one because we can save the RAM from having that one always allocated by
+    //just putting it on the stack when we want to take a reading.
+    NanoProtoShield(FEATURES features = FEATURE_ALL);
+    ~NanoProtoShield();
 
     //begin() should be called in the setup() part of any script that uses a global NanoProtoShield object.
     //Sets up all the I/O pins and begins the member classes and prepares them for use.
@@ -77,30 +107,30 @@ class NanoProtoShield {
 
     void oledDisplay(int clear_after = 0);
     void oledClear();
-    void oledInvert(bool i) {m_oled.invertDisplay(i);}
-    size_t oledPrint(const __FlashStringHelper *f)  { m_oled.print(f); }
-    size_t oledPrint(const String &s)               { m_oled.print(s); }
-    size_t oledPrint(const char c[])                { m_oled.print(c); }
-    size_t oledPrint(char c)                        { m_oled.print(c); }
-    size_t oledPrint(unsigned char c, int b = DEC)  { m_oled.print(c,b); }
-    size_t oledPrint(int i, int b = DEC)            { m_oled.print(i,b); }
-    size_t oledPrint(unsigned int i, int b= DEC)    { m_oled.print(i,b); }
-    size_t oledPrint(long i, int b = DEC)           { m_oled.print(i,b); }
-    size_t oledPrint(unsigned long i, int b = DEC)  { m_oled.print(i,b); }
-    size_t oledPrint(double d, int digits = 2)      { m_oled.print(d,digits); }
-    size_t oledPrint(const Printable& p)            { m_oled.print(p); }
-    size_t oledPrintln(const __FlashStringHelper *f)    { m_oled.println(f); }
-    size_t oledPrintln(const String &s)                 { m_oled.println(s); }
-    size_t oledPrintln(const char c[])                  { m_oled.println(c); }
-    size_t oledPrintln(char c)                          { m_oled.println(c); }
-    size_t oledPrintln(unsigned char c, int b = DEC)    { m_oled.println(c,b); }
-    size_t oledPrintln(int i, int b = DEC)              { m_oled.println(i,b); }
-    size_t oledPrintln(unsigned int i, int b = DEC)     { m_oled.println(i,b); }
-    size_t oledPrintln(long i, int b = DEC)             { m_oled.println(i,b); }
-    size_t oledPrintln(unsigned long i, int b = DEC)    { m_oled.println(i,b); }
-    size_t oledPrintln(double d, int digits = 2)        { m_oled.println(d,digits); }
-    size_t oledPrintln(const Printable& p)              { m_oled.println(p); }
-    size_t oledPrintln(void)                            { m_oled.println(); }
+    void oledInvert(bool i) {if(m_oled) m_oled->invertDisplay(i);}
+    size_t oledPrint(const __FlashStringHelper *f)  { return m_oled? m_oled->print(f) : 0; }
+    size_t oledPrint(const String &s)               { return m_oled? m_oled->print(s) : 0; }
+    size_t oledPrint(const char c[])                { return m_oled? m_oled->print(c) : 0; }
+    size_t oledPrint(char c)                        { return m_oled? m_oled->print(c) : 0; }
+    size_t oledPrint(unsigned char c, int b = DEC)  { return m_oled? m_oled->print(c,b) : 0; }
+    size_t oledPrint(int i, int b = DEC)            { return m_oled? m_oled->print(i,b) : 0; }
+    size_t oledPrint(unsigned int i, int b= DEC)    { return m_oled? m_oled->print(i,b) : 0; }
+    size_t oledPrint(long i, int b = DEC)           { return m_oled? m_oled->print(i,b) : 0; }
+    size_t oledPrint(unsigned long i, int b = DEC)  { return m_oled? m_oled->print(i,b) : 0; }
+    size_t oledPrint(double d, int digits = 2)      { return m_oled? m_oled->print(d,digits) : 0; }
+    size_t oledPrint(const Printable& p)            { return m_oled? m_oled->print(p) : 0; }
+    size_t oledPrintln(const __FlashStringHelper *f)    { return m_oled? m_oled->println(f) : 0; }
+    size_t oledPrintln(const String &s)                 { return m_oled? m_oled->println(s) : 0; }
+    size_t oledPrintln(const char c[])                  { return m_oled? m_oled->println(c) : 0; }
+    size_t oledPrintln(char c)                          { return m_oled? m_oled->println(c) : 0; }
+    size_t oledPrintln(unsigned char c, int b = DEC)    { return m_oled? m_oled->println(c,b) : 0; }
+    size_t oledPrintln(int i, int b = DEC)              { return m_oled? m_oled->println(i,b) : 0; }
+    size_t oledPrintln(unsigned int i, int b = DEC)     { return m_oled? m_oled->println(i,b) : 0; }
+    size_t oledPrintln(long i, int b = DEC)             { return m_oled? m_oled->println(i,b) : 0; }
+    size_t oledPrintln(unsigned long i, int b = DEC)    { return m_oled? m_oled->println(i,b) : 0; }
+    size_t oledPrintln(double d, int digits = 2)        { return m_oled? m_oled->println(d,digits) : 0; }
+    size_t oledPrintln(const Printable& p)              { return m_oled? m_oled->println(p) : 0; }
+    size_t oledPrintln(void)                            { return m_oled? m_oled->println() : 0; }
 
     // Fill strip pixels one after another with a color. Strip is NOT cleared
     // first; anything there will be covered pixel by pixel. Pause for 'wait'
@@ -114,13 +144,13 @@ class NanoProtoShield {
     void rgbRainbow(int wait);
     //Clears the RGB LED strip and calls show so that the changes are seen
     void rgbClear();
-    void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b)   {m_rgb.setPixelColor( pixel % RGB_LED_COUNT, m_rgb.Color(r,g,b));};
-    void rgbSetPixelColor(uint8_t pixel, uint32_t color)                    {m_rgb.setPixelColor( pixel, color );};
+    void rgbSetPixelColor(uint8_t pixel, uint8_t r, uint8_t g, uint8_t b)   {if(m_rgb) m_rgb->setPixelColor( pixel % RGB_LED_COUNT, m_rgb->Color(r,g,b));};
+    void rgbSetPixelColor(uint8_t pixel, uint32_t color)                    {if(m_rgb) m_rgb->setPixelColor( pixel, color );};
     //Set the color of all the pixels
     void rgbSetPixelsColor(uint8_t r, uint8_t g, uint8_t b);
     void rgbSetPixelsColor(uint32_t color);
-    void rgbSetBrightness(uint8_t brightness)   {m_rgb.setBrightness(brightness);};
-    void rgbShow() {m_rgb.show();};
+    void rgbSetBrightness(uint8_t brightness)   {if(m_rgb) m_rgb->setBrightness(brightness);};
+    void rgbShow() {m_rgb->show();};
     uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
     //Set to true if you want the RGB color wipe and rainbow functions to check for button events
     //Not doing this makes non-interrupt driven (anything other than the UP button) button presses
@@ -132,8 +162,8 @@ class NanoProtoShield {
     float pot3Read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
     float lightMeterRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
 
-    int rotaryRead() {return m_rotary.read()/4;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
-    void rotaryWrite(int value) {m_rotary.write(value*4);}
+    int rotaryRead() {return (m_rotary)? m_rotary->read()/4 : 0;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
+    void rotaryWrite(int value) {if(m_rotary) m_rotary->write(value*4);}
 
     //Wrtine left and right out to the 7 segment display digits
     //These are raw bytes, so they follow the formatting described where
@@ -166,19 +196,19 @@ class NanoProtoShield {
     float getTempF() {return ((m_temperatureC * 1.8f) + 32.0f) ;}
 
     void mpuCalculateOffsets(int wait);
-    void mpuUpdate() {m_mpu.update();}
-    float mpuGetTemp(){ return m_mpu.getTemp(); }
-    float mpuGetAccX(){ return m_mpu.getAccX(); }
-    float mpuGetAccY(){ return m_mpu.getAccY(); }
-    float mpuGetAccZ(){ return m_mpu.getAccZ(); }
-    float mpuGetGyroX(){ return m_mpu.getGyroX(); }
-    float mpuGetGyroY(){ return m_mpu.getGyroY(); }
-    float mpuGetGyroZ(){ return m_mpu.getGyroZ(); }
-    float mpuGetAccAngleX(){ return m_mpu.getAccAngleX(); }
-    float mpuGetAccAngleY(){ return m_mpu.getAccAngleY(); }//yup, no Z
-    float mpuGetAngleX(){ return m_mpu.getAngleX(); }
-    float mpuGetAngleY(){ return m_mpu.getAngleY(); }
-    float mpuGetAngleZ(){ return m_mpu.getAngleZ(); }
+    void mpuUpdate() {if(m_mpu) m_mpu->update();}
+    float mpuGetTemp(){ return (m_mpu)? m_mpu->getTemp() : 0; }
+    float mpuGetAccX(){ return (m_mpu)? m_mpu->getAccX() : 0; }
+    float mpuGetAccY(){ return (m_mpu)? m_mpu->getAccY() : 0; }
+    float mpuGetAccZ(){ return (m_mpu)? m_mpu->getAccZ() : 0; }
+    float mpuGetGyroX(){ return (m_mpu)? m_mpu->getGyroX() : 0; }
+    float mpuGetGyroY(){ return (m_mpu)? m_mpu->getGyroY() : 0; }
+    float mpuGetGyroZ(){ return (m_mpu)? m_mpu->getGyroZ() : 0; }
+    float mpuGetAccAngleX(){ return (m_mpu)? m_mpu->getAccAngleX() : 0; }
+    float mpuGetAccAngleY(){ return (m_mpu)? m_mpu->getAccAngleY() : 0; }//yup, no Z
+    float mpuGetAngleX(){ return (m_mpu)? m_mpu->getAngleX() : 0; }
+    float mpuGetAngleY(){ return (m_mpu)? m_mpu->getAngleY() : 0; }
+    float mpuGetAngleZ(){ return (m_mpu)? m_mpu->getAngleZ() : 0; }
 
     //Calling interrupt let's the NanoProtoShield know that any function which may take a while (e.g. RGB sequences) should
     //check to see if they need to do an early abort. This allows for a faster UI response when using buttons for navigation
@@ -211,29 +241,29 @@ class NanoProtoShield {
     void buttonSetReleaseEvent(BUTTON b, void (*buttenEvent)(void));
 
     //Clear out event handlers that have been set already
-    void buttonClearPressEvent(BUTTON b) {(b<BUTTON_COUNT)?m_buttonPressEvents[b] = NULL : NULL;};
-    void buttonClearReleaseEvent(BUTTON b){(b<BUTTON_COUNT)?m_buttonReleaseEvents[b] = NULL : NULL;};
+    void buttonClearPressEvent(BUTTON b) {if(b < BUTTON_COUNT) m_buttonPressEvents[b] = NULL;};
+    void buttonClearReleaseEvent(BUTTON b){if(b < BUTTON_COUNT) m_buttonReleaseEvents[b] = NULL;};
 
     //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
-    bool buttonUpPressed(){ return digitalRead(PIN_UP_BUTTON); }
-    bool buttonDownPressed(){ return digitalRead(PIN_DOWN_BUTTON); }
-    bool buttonRightPressed(){ return digitalRead(PIN_RIGHT_BUTTON); }
-    bool buttonLeftPressed(){ return digitalRead(PIN_LEFT_BUTTON); }
-    bool buttonRotaryPressed(){ return !digitalRead(PIN_ROT_ENC_BUTTON); }//Hardware has this input inverted (active high)
+    bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(PIN_UP_BUTTON) : 0; }
+    bool buttonDownPressed(){ return (m_features & FEATURE_BUTTON_DOWN)? digitalRead(PIN_DOWN_BUTTON) : 0; }
+    bool buttonRightPressed(){ return (m_features & FEATURE_BUTTON_RIGHT)? digitalRead(PIN_RIGHT_BUTTON) : 0; }
+    bool buttonLeftPressed(){ return (m_features & FEATURE_BUTTON_LEFT)? digitalRead(PIN_LEFT_BUTTON) : 0; }
+    bool buttonRotaryPressed(){ return (m_features & FEATURE_ROT_ENC_BUTTON)? !digitalRead(PIN_ROT_ENC_BUTTON) : 0; }//Hardware has this input inverted (active high)
 
     //TODO
     //Need objects, functions, and test mode for IR
-    //Need init way to use a reduced number of pins so some can be used for alternate functions
-    //look at other types (float?!?) for oledPrint(ln)
-    //make way for button check to interrupt rgb functions
     //RGB class??
 
     private:
-    Adafruit_SSD1306        m_oled;
-    Encoder                 m_rotary;
-    OneWire                 m_oneWire;
-    MPU6050                 m_mpu;
-    Adafruit_NeoPixel       m_rgb;
+    FEATURES                m_features;
+
+    Adafruit_SSD1306        *m_oled;
+    Encoder                 *m_rotary;
+    OneWire                 *m_oneWire;
+    DallasTemperature       *m_tempSensor;
+    MPU6050                 *m_mpu;
+    Adafruit_NeoPixel       *m_rgb;
 
     byte                    m_shift7segLeft;
     byte                    m_shift7segRight;
