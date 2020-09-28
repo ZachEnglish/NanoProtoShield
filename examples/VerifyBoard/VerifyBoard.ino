@@ -1,7 +1,7 @@
 //This example is used to verify that the HW is fully functional. Goes through several test modes
 //by using the 'up' button to transition between them. Uses the OLED to give a brief description
 //of the current test.
-
+//#define USE_VERSION_2_0_PINOUT
 #include "NanoProtoShield.h"
 
 NanoProtoShield g_nps;
@@ -45,7 +45,7 @@ void setup(){
 void loop(){
     float lightLevel = 0.0f;
     byte whichBit = 0;
-    bool skipOled = (g_currentTest == TEST_SHIFT_LEDS_FAST || g_currentTest == TEST_7SEG_FAST || g_currentTest == TEST_ROTARY );
+    bool skipOled = (g_currentTest == TEST_SHIFT_LEDS_FAST || g_currentTest == TEST_7SEG_FAST || g_currentTest == TEST_ROTARY || g_currentTest == TEST_MPU );
     bool isFirstTime = g_lastTest != g_currentTest;
 
     g_lastTest = g_currentTest;
@@ -141,6 +141,7 @@ void loop(){
             g_nps.mpuUpdate();
 
             if (millis() - g_timer > 1000) { // print data every second
+                g_lastTest = TEST_COUNT_OF_TESTS; // hack to force update the OLED only when we change the data on the screen
                 g_nps.oledPrint(F("TEMP (C): ")); g_nps.oledPrintln(g_nps.mpuGetTemp(),0);
                 g_nps.oledPrint(F("ANGLE X: ")); g_nps.oledPrintln(g_nps.mpuGetAngleX(),0);
                 g_nps.oledPrint(F("ANGLE Y: ")); g_nps.oledPrintln(g_nps.mpuGetAngleY(),0);

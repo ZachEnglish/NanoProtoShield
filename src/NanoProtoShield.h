@@ -9,11 +9,35 @@
 #include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
 #include <Encoder.h> //for talking to the rotary encoded. Try ClickEncoder?
 #include <OneWire.h> //for talking to one wire devices like the temperature sensor.
+#define REQUIRESALARMS false //saves bytes in the DallasTemperature object by not enabling functionality we don't need/use
 #include <DallasTemperature.h> //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
 
 
 // ------------- BOARD SPECIFIC DEFINES -------------
+#ifdef USE_VERSION_2_0_PINOUT
+
+#define PIN_LEFT_BUTTON     5
+#define PIN_RIGHT_BUTTON    6
+#define PIN_UP_BUTTON       3
+#define PIN_DOWN_BUTTON     4
+#define PIN_ROT_ENC_BUTTON  8
+#define PIN_ROT_ENC_A       2
+#define PIN_ROT_ENC_B       7
+#define PIN_SHIFT_LATCH     10
+#define PIN_SHIFT_CLOCK     11
+#define PIN_SHIFT_DATA      13
+#define PIN_TEMPERATURE     9
+#define PIN_RGB_LED         12
+#define PIN_POT1            A0
+#define PIN_POT2            A1
+#define PIN_POT3            A2
+#define PIN_PHOTO           A3
+#define PIN_IR_RX           A7
+#define PIN_IR_TX           A6
+
+#else //no "if" here, default to the latest board design
+
 //For version 3.0
 //Button and rotary encoder pins. Only 2 & 3 can have interrupts on the Nano
 #define PIN_LEFT_BUTTON     5
@@ -34,6 +58,8 @@
 #define PIN_PHOTO           A7
 #define PIN_IR_RX           A3
 #define PIN_IR_TX           9
+
+#endif //finish off the #ifdef/else for pinout version.
 
 
 // ------------- RGB LED DEFINES -------------
