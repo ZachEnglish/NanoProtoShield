@@ -8,9 +8,9 @@
 #include <Adafruit_SSD1306.h> //for talking to OLED display
 #include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
 #include <Encoder.h> //for talking to the rotary encoded. Try ClickEncoder?
-#include <OneWire.h> //for talking to one wire devices like the temperature sensor.
+#include "OneWireWithPullup.h" //for talking to one wire devices like the temperature sensor.
 #define REQUIRESALARMS false //saves bytes in the DallasTemperature object by not enabling functionality we don't need/use
-#include <DallasTemperature.h> //for talking to the temperature sensor
+#include "DallasTemperatureWithPullup.h" //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
 
 
@@ -286,8 +286,9 @@ class NanoProtoShield {
 
     Adafruit_SSD1306        *m_oled;
     Encoder                 *m_rotary;
-    OneWire                 *m_oneWire;
-    DallasTemperature       *m_tempSensor;
+    OneWireWithPullup       *m_oneWire;
+    DallasTemperatureWithPullup
+                            *m_tempSensor;
     MPU6050                 *m_mpu;
     Adafruit_NeoPixel       *m_rgb;
 

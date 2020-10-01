@@ -305,10 +305,10 @@ void NanoProtoShield::shiftTestSequence(int wait){
 
 void NanoProtoShield::takeTemperatureReading(){
   if(!m_oneWire){
-    m_oneWire = new OneWire(PIN_TEMPERATURE);
+    m_oneWire = new OneWireWithPullup(PIN_TEMPERATURE);
   }
   if(!m_tempSensor){
-    m_tempSensor = new DallasTemperature(m_oneWire);
+    m_tempSensor = new DallasTemperatureWithPullup(m_oneWire);
   }
     
   //Start up the temperature sensor library
