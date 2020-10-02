@@ -72,6 +72,9 @@
 #define OLED_SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define OLED_ADDRESS 0x3C
+#define OLED_COLOR_BLACK SSD1306_BLACK
+#define OLED_COLOR_WHITE SSD1306_WHITE
+#define OLED_COLOR_INVERT SSD1306_INVERT
 
 
 #define ANALOG_TO_VOLTAGE (5.0 / 1023.0) //Multiply by to convert an analog reading to voltage level
@@ -131,9 +134,12 @@ class NanoProtoShield {
     //Sets up all the I/O pins and begins the member classes and prepares them for use.
     void begin();
 
-    void oledDisplay(int clear_after = 0);
     void oledClear();
+    void oledDisplay(int clear_after = 0);
     void oledInvert(bool i) {if(m_oled) m_oled->invertDisplay(i);}
+    
+    void oledSetTextSize(uint8_t size) { if(m_oled) m_oled->setTextSize(size); }
+    void oledSetTextSize(uint8_t xSize, uint8_t ySize) { if(m_oled) m_oled->setTextSize(xSize, ySize); }
     size_t oledPrint(const __FlashStringHelper *f)  { return m_oled? m_oled->print(f) : 0; }
     size_t oledPrint(const String &s)               { return m_oled? m_oled->print(s) : 0; }
     size_t oledPrint(const char c[])                { return m_oled? m_oled->print(c) : 0; }
@@ -157,6 +163,34 @@ class NanoProtoShield {
     size_t oledPrintln(double d, int digits = 2)        { return m_oled? m_oled->println(d,digits) : 0; }
     size_t oledPrintln(const Printable& p)              { return m_oled? m_oled->println(p) : 0; }
     size_t oledPrintln(void)                            { return m_oled? m_oled->println() : 0; }
+    
+    void oledDrawPixel(int16_t x, int16_t y, uint16_t color = OLED_COLOR_WHITE) { if(m_oled) m_oled->drawPixel(x,y,color); }
+                                                    //color is OLED_COLOR_BLACK, OLED_COLOR_WHITE, or OLED_COLOR_INVERT
+    void oledDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawLine(x0, y0, x1, y1, color); }
+    void oledDrawRect(int16_t x0, int16_t y0, int16_t width, int16_t height, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawRect(x0, y0, width, height, color); }
+    void oledDrawCircle(int16_t x0, int16_t y0, int16_t radius, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawCircle(x0, y0, radius, color); }
+    void oledDrawFilledCircle(int16_t x0, int16_t y0, int16_t radius, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->fillCircle(x0, y0, radius, color); }
+    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawTriangle(x0, y0, x1, y1, x2, y2, color); }
+    void drawFilledTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->fillTriangle(x0, y0, x1, y1, x2, y2, color); }
+    void oledDrawRoundRect(int16_t x0, int16_t y0, int16_t width, int16_t height, int16_t radius, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawRoundRect(x0, y0, width, height, radius, color); }
+    void oledDrawFilledRoundRect(int16_t x0, int16_t y0, int16_t width, int16_t height, int16_t radius, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->fillRoundRect(x0, y0, width, height, radius, color); }
+    
+    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height)
+        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, width, height); }
+    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t width, int16_t height)
+        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, width, height); }
+    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], const uint8_t mask[], int16_t width, int16_t height)
+        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, mask, width, height); }
+    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, uint8_t *mask, int16_t width, int16_t height)
+        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, mask, width, height); }
 
     // Fill strip pixels one after another with a color. Strip is NOT cleared
     // first; anything there will be covered pixel by pixel. Pause for 'wait'
@@ -279,7 +313,6 @@ class NanoProtoShield {
 
     //TODO
     //Need objects, functions, and test mode for IR
-    //RGB class??
 
     private:
     FEATURES                m_features;
