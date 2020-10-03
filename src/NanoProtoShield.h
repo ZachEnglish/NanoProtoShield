@@ -40,24 +40,61 @@
 
 //For version 3.0
 //Button and rotary encoder pins. Only 2 & 3 can have interrupts on the Nano
+//Pinout can be overridden by defining the pin before the #include "NanoProtoShield.h" line
+#ifndef PIN_LEFT_BUTTON
 #define PIN_LEFT_BUTTON     5
+#endif
+#ifndef PIN_RIGHT_BUTTON
 #define PIN_RIGHT_BUTTON    6
+#endif
+#ifndef PIN_UP_BUTTON
 #define PIN_UP_BUTTON       3
+#endif
+#ifndef PIN_DOWN_BUTTON
 #define PIN_DOWN_BUTTON     4
+#endif
+#ifndef PIN_ROT_ENC_BUTTON
 #define PIN_ROT_ENC_BUTTON  8
+#endif
+#ifndef PIN_ROT_ENC_A
 #define PIN_ROT_ENC_A       2
+#endif
+#ifndef PIN_ROT_ENC_B
 #define PIN_ROT_ENC_B       7
+#endif
+#ifndef PIN_SHIFT_LATCH
 #define PIN_SHIFT_LATCH     10
+#endif
+#ifndef PIN_SHIFT_CLOCK
 #define PIN_SHIFT_CLOCK     11
+#endif
+#ifndef PIN_SHIFT_DATA
 #define PIN_SHIFT_DATA      13
+#endif
+#ifndef PIN_TEMPERATURE
 #define PIN_TEMPERATURE     A2
+#endif
+#ifndef PIN_RGB_LED
 #define PIN_RGB_LED         12
+#endif
+#ifndef PIN_POT1
 #define PIN_POT1            A0
+#endif
+#ifndef PIN_POT2
 #define PIN_POT2            A1
+#endif
+#ifndef PIN_POT3
 #define PIN_POT3            A6
+#endif
+#ifndef PIN_PHOTO
 #define PIN_PHOTO           A7
+#endif
+#ifndef PIN_IR_RX
 #define PIN_IR_RX           A3
+#endif
+#ifndef PIN_IR_TX
 #define PIN_IR_TX           9
+#endif
 
 #endif //finish off the #ifdef/else for pinout version.
 
