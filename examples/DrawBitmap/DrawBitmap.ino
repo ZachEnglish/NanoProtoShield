@@ -1,7 +1,5 @@
 //The purpose of this example is to show how to draw a bitmap onto the OLED
-//Draws a snowflake and animates it
-//TODO Something ain't right about the bitmap, seems to be drawing random memory or something else
-//     Guessing it is not properly grabbing memory from the PROGMEM or something
+//Draws a snowflake and a smiley
 
 #include "NanoProtoShield.h"
 
@@ -25,14 +23,45 @@ static const unsigned char PROGMEM snowflakeBmp[] =
   B00111111, B11110000,
   B01111100, B11110000,
   B01110000, B01110000,
-  B00000000, B00110000 };
+  B00000000, B00110000
+};
 
-void setup(){
-    g_nps.begin();
+#define SMILEY_HEIGHT   16
+#define SMILEY_WIDTH    16
+static const unsigned char PROGMEM smileyBmp[] =
+{ B00000111, B11100000,
+  B00001000, B00010000,
+  B00110000, B00001100,
+  B00100000, B00000100,
+  B01000100, B00100010,
+  B10001010, B01010010,
+  B10000100, B00100001,
+  B10000000, B00000001,
+  B10000000, B00000001,
+  B10000000, B00000001,
+  B10010000, B00001010,
+  B01001000, B00010010,
+  B00100111, B11100100,
+  B00110000, B00001100,
+  B00001100, B00110000,
+  B00000011, B11000000
+};
+
+void setup() {
+  g_nps.begin();
 }
 
-void loop(){
-    g_nps.oledClear();
-    g_nps.oledDrawBitmap(0, 0, snowflakeBmp, SNOWFLAKE_WIDTH, SNOWFLAKE_HEIGHT);
-    g_nps.oledDisplay();
+void loop() {
+  int x, y;
+
+  x = (OLED_SCREEN_WIDTH - SNOWFLAKE_WIDTH) / 2;
+  y = (OLED_SCREEN_HEIGHT - SNOWFLAKE_HEIGHT) / 2;
+
+  g_nps.oledClear();
+
+  g_nps.oledDrawBitmap(x, y - 20, snowflakeBmp, SNOWFLAKE_WIDTH, SNOWFLAKE_HEIGHT);
+
+  g_nps.oledDrawBitmap(x, y + 20, smileyBmp, SMILEY_WIDTH, SMILEY_HEIGHT);
+
+  g_nps.oledDisplay();
 }

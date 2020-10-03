@@ -183,14 +183,14 @@ class NanoProtoShield {
     void oledDrawFilledRoundRect(int16_t x0, int16_t y0, int16_t width, int16_t height, int16_t radius, uint16_t color = OLED_COLOR_WHITE)
         { if(m_oled) m_oled->fillRoundRect(x0, y0, width, height, radius, color); }
     
-    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height)
-        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, width, height); }
-    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t width, int16_t height)
-        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, width, height); }
-    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], const uint8_t mask[], int16_t width, int16_t height)
-        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, mask, width, height); }
-    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, uint8_t *mask, int16_t width, int16_t height)
-        { if(m_oled) m_oled->drawGrayscaleBitmap(x, y, bitmap, mask, width, height); }
+    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawBitmap(x, y, bitmap, width, height, color); }
+    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t width, int16_t height, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawBitmap(x, y, bitmap, width, height, color); }
+    void oledDrawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], const uint8_t mask[], int16_t width, int16_t height, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawBitmap(x, y, bitmap, mask, width, height, color); }
+    void oledDrawBitmap(int16_t x, int16_t y, uint8_t *bitmap, uint8_t *mask, int16_t width, int16_t height, uint16_t color = OLED_COLOR_WHITE)
+        { if(m_oled) m_oled->drawBitmap(x, y, bitmap, mask, width, height, color); }
 
     // Fill strip pixels one after another with a color. Strip is NOT cleared
     // first; anything there will be covered pixel by pixel. Pause for 'wait'
