@@ -1,5 +1,17 @@
-//The purpose of this example is to show how to draw a bitmap onto the OLED
-//Draws a snowflake and a smiley
+/*  DrawBitmap.ino
+
+    Purpose:
+        The purpose of this example is to show how to draw a bitmap onto the OLED
+
+    What it does:
+        Draws a snowflake and a smiley
+
+    TODOs (Things that are broken/not yet working/could be improved):
+        None
+
+    Special Notes:
+        None
+*/
 
 #include "NanoProtoShield.h"
 

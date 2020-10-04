@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "NanoProtoShield.h"
 
-//Mapping for 7 segment display.
+//Mapping for 7 segment display. dp->decimal point
 // AAAAAAA
 // F     B
 // F     B
@@ -34,7 +34,6 @@ const byte g_map_7seg[] PROGMEM = {
 //Can be bitwise 'or'ed (single '|') together with the other segments in the g_map_7seg to add the decimal point
 #define DEC_7SEG 0b10000000
 
-
 NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL) {
   //Initialize the class's memory of what data the shift registers have
   m_shift7segLeft  = 0xFF;
@@ -46,26 +45,6 @@ NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL) {
   m_temperatureC   = 0;
 
   m_features = features;
-
-  if( m_features & FEATURE_OLED ){
-    m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
-  }
-  if( m_features & FEATURE_ROTARY_TWIST ) {
-    m_rotary = new Encoder(PIN_ROT_ENC_B, PIN_ROT_ENC_A); //this order makes clockwise positive on the NPS
-  }
-  m_oneWire = NULL;
-  m_tempSensor = NULL;
-  if( m_features & FEATURE_MPU ) {
-    m_mpu = new MPU6050(Wire);
-  }
-  if( m_features & FEATURE_RGB ) {
-    m_rgb = new Adafruit_NeoPixel(RGB_LED_COUNT, PIN_RGB_LED, NEO_GRB + NEO_KHZ800);
-  }
-
-  for(int i = 0; i < BUTTON_COUNT; i++){
-    m_buttonPressEvents[i] = NULL;
-    m_buttonReleaseEvents[i] = NULL;
-  }
 }
 
 NanoProtoShield::~NanoProtoShield() {
@@ -84,33 +63,61 @@ NanoProtoShield::~NanoProtoShield() {
   
 }
 
-void NanoProtoShield::begin(){
+void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
+  if(pinout) {
+    for(int i = 0; i < INDEX_PIN_COUNT; i++) {
+      m_pinout[i] = pinout[i];
+    }
+  } else {
+    initializePinIndexToDefault(m_pinout);
+  }
+
+  if( m_features & FEATURE_OLED ){
+    m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
+  }
+  if( m_features & FEATURE_ROTARY_TWIST ) {
+    m_rotary = new Encoder(getPin(INDEX_PIN_ROT_ENC_B), getPin(INDEX_PIN_ROT_ENC_A)); //this order makes clockwise positive on the NPS
+  }
+  m_oneWire = NULL;
+  m_tempSensor = NULL;
+  if( m_features & FEATURE_MPU ) {
+    m_mpu = new MPU6050(Wire);
+  }
+  if( m_features & FEATURE_RGB ) {
+    m_rgb = new Adafruit_NeoPixel(RGB_LED_COUNT, getPin(INDEX_PIN_RGB_LED), NEO_GRB + NEO_KHZ800);
+  }
+
+  for(int i = 0; i < BUTTON_COUNT; i++){
+    m_buttonPressEvents[i] = NULL;
+    m_buttonReleaseEvents[i] = NULL;
+  }
+
   //Set up shift register pins
   if(m_features & FEATURE_SHIFTS){
-    pinMode(PIN_SHIFT_LATCH, OUTPUT);
-    pinMode(PIN_SHIFT_CLOCK, OUTPUT);
-    pinMode(PIN_SHIFT_DATA, OUTPUT);
+    pinMode(getPin(INDEX_PIN_SHIFT_LATCH), OUTPUT);
+    pinMode(getPin(INDEX_PIN_SHIFT_CLOCK), OUTPUT);
+    pinMode(getPin(INDEX_PIN_SHIFT_DATA), OUTPUT);
   }
 
   //Set up the buttons as imputs
   if(m_features & FEATURE_BUTTON_LEFT){
-    pinMode(PIN_LEFT_BUTTON, INPUT);
+    pinMode(getPin(INDEX_PIN_LEFT_BUTTON), INPUT);
   }
   if(m_features & FEATURE_BUTTON_RIGHT){
-    pinMode(PIN_RIGHT_BUTTON, INPUT);
+    pinMode(getPin(INDEX_PIN_RIGHT_BUTTON), INPUT);
   }
   if(m_features & FEATURE_BUTTON_UP){
-    pinMode(PIN_UP_BUTTON, INPUT);
+    pinMode(getPin(INDEX_PIN_UP_BUTTON), INPUT);
   }
   if(m_features & FEATURE_BUTTON_DOWN){
-    pinMode(PIN_DOWN_BUTTON, INPUT);
+    pinMode(getPin(INDEX_PIN_DOWN_BUTTON), INPUT);
   }
   if(m_features & FEATURE_ROT_ENC_BUTTON){
-    pinMode(PIN_ROT_ENC_BUTTON, INPUT);
+    pinMode(getPin(INDEX_PIN_ROT_ENC_BUTTON), INPUT);
   }
   if(m_features & FEATURE_ROTARY_TWIST){
-    pinMode(PIN_ROT_ENC_A, INPUT);
-    pinMode(PIN_ROT_ENC_B, INPUT);
+    pinMode(getPin(INDEX_PIN_ROT_ENC_A), INPUT);
+    pinMode(getPin(INDEX_PIN_ROT_ENC_B), INPUT);
   }
 
   //Set up the RGB strip
@@ -230,11 +237,11 @@ void NanoProtoShield::shift7segWrite(byte left, byte right){
     //invert the input because the 7 segment leds are active low
     m_shift7segLeft = ~left;
     m_shift7segRight = ~right;
-    digitalWrite(PIN_SHIFT_LATCH, LOW);
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift7segRight); //this gets shifted to the second display, send it first
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift7segLeft);
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shiftLed);
-    digitalWrite(PIN_SHIFT_LATCH, HIGH);
+    digitalWrite(getPin(INDEX_PIN_SHIFT_LATCH), LOW);
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shift7segRight); //this gets shifted to the second display, send it first
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shift7segLeft);
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shiftLed);
+    digitalWrite(getPin(INDEX_PIN_SHIFT_LATCH), HIGH);
   }
 }
 
@@ -263,11 +270,11 @@ void NanoProtoShield::shift7segPrintHex(uint8_t num){
 void NanoProtoShield::shiftLedWrite(byte b){
   if(m_features & FEATURE_SHIFTS) {
     m_shiftLed = b;
-    digitalWrite(PIN_SHIFT_LATCH, LOW);
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift7segRight); //this gets shifted to the second display, send it first
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shift7segLeft);
-    shiftOut(PIN_SHIFT_DATA, PIN_SHIFT_CLOCK, MSBFIRST, m_shiftLed);
-    digitalWrite(PIN_SHIFT_LATCH, HIGH);
+    digitalWrite(getPin(INDEX_PIN_SHIFT_LATCH), LOW);
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shift7segRight); //this gets shifted to the second display, send it first
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shift7segLeft);
+    shiftOut(getPin(INDEX_PIN_SHIFT_DATA), getPin(INDEX_PIN_SHIFT_CLOCK), MSBFIRST, m_shiftLed);
+    digitalWrite(getPin(INDEX_PIN_SHIFT_LATCH), HIGH);
   }
 }
 
@@ -305,7 +312,7 @@ void NanoProtoShield::shiftTestSequence(int wait){
 
 void NanoProtoShield::takeTemperatureReading(){
   if(!m_oneWire){
-    m_oneWire = new OneWire(PIN_TEMPERATURE);
+    m_oneWire = new OneWire(getPin(INDEX_PIN_TEMPERATURE));
   }
   if(!m_tempSensor){
     m_tempSensor = new DallasTemperature(m_oneWire);
@@ -356,19 +363,19 @@ void NanoProtoShield::buttonCheckForEvent(){
   m_buttonState = 0;
 
   if(m_features & FEATURE_BUTTON_UP){
-    m_buttonState |= digitalRead(PIN_UP_BUTTON) << BUTTON_UP;
+    m_buttonState |= digitalRead(getPin(INDEX_PIN_UP_BUTTON)) << BUTTON_UP;
   }
   if(m_features & FEATURE_BUTTON_DOWN){
-    m_buttonState |= digitalRead(PIN_DOWN_BUTTON) << BUTTON_DOWN;
+    m_buttonState |= digitalRead(getPin(INDEX_PIN_DOWN_BUTTON)) << BUTTON_DOWN;
   }
   if(m_features & FEATURE_BUTTON_LEFT){
-    m_buttonState |= digitalRead(PIN_LEFT_BUTTON) << BUTTON_LEFT;
+    m_buttonState |= digitalRead(getPin(INDEX_PIN_LEFT_BUTTON)) << BUTTON_LEFT;
   }
   if(m_features & FEATURE_BUTTON_RIGHT){
-    m_buttonState |= digitalRead(PIN_RIGHT_BUTTON) << BUTTON_RIGHT;
+    m_buttonState |= digitalRead(getPin(INDEX_PIN_RIGHT_BUTTON)) << BUTTON_RIGHT;
   }
   if(m_features & FEATURE_ROT_ENC_BUTTON){
-    m_buttonState |= digitalRead(PIN_ROT_ENC_BUTTON) << BUTTON_ROTARY;
+    m_buttonState |= !digitalRead(getPin(INDEX_PIN_ROT_ENC_BUTTON)) << BUTTON_ROTARY;//Hardware has this input inverted (active high)
   }
 
   m_buttonPressed = m_buttonPressed | (m_buttonState &(~old_state));
@@ -423,4 +430,27 @@ int decrementValueWithMaxRollover(int value, int max) {
     value = max - 1;
   value %= max;
   return value;
+}
+
+void initializePinIndexToDefault(INDEX_PINS *iPen) {
+  if(iPen){
+    iPen[INDEX_PIN_LEFT_BUTTON]    = PIN_DEFAULT_LEFT_BUTTON;
+    iPen[INDEX_PIN_RIGHT_BUTTON]   = PIN_DEFAULT_RIGHT_BUTTON;
+    iPen[INDEX_PIN_UP_BUTTON]      = PIN_DEFAULT_UP_BUTTON;
+    iPen[INDEX_PIN_DOWN_BUTTON]    = PIN_DEFAULT_DOWN_BUTTON;
+    iPen[INDEX_PIN_ROT_ENC_BUTTON] = PIN_DEFAULT_ROT_ENC_BUTTON;
+    iPen[INDEX_PIN_ROT_ENC_A]      = PIN_DEFAULT_ROT_ENC_A;
+    iPen[INDEX_PIN_ROT_ENC_B]      = PIN_DEFAULT_ROT_ENC_B;
+    iPen[INDEX_PIN_SHIFT_LATCH]    = PIN_DEFAULT_SHIFT_LATCH;
+    iPen[INDEX_PIN_SHIFT_CLOCK]    = PIN_DEFAULT_SHIFT_CLOCK;
+    iPen[INDEX_PIN_SHIFT_DATA]     = PIN_DEFAULT_SHIFT_DATA;
+    iPen[INDEX_PIN_TEMPERATURE]    = PIN_DEFAULT_TEMPERATURE;
+    iPen[INDEX_PIN_RGB_LED]        = PIN_DEFAULT_RGB_LED;
+    iPen[INDEX_PIN_POT1]           = PIN_DEFAULT_POT1;
+    iPen[INDEX_PIN_POT2]           = PIN_DEFAULT_POT2;
+    iPen[INDEX_PIN_POT3]           = PIN_DEFAULT_POT3;
+    iPen[INDEX_PIN_PHOTO]          = PIN_DEFAULT_PHOTO;
+    iPen[INDEX_PIN_IR_RX]          = PIN_DEFAULT_IR_RX;
+    iPen[INDEX_PIN_IR_TX]          = PIN_DEFAULT_IR_TX;
+  }
 }

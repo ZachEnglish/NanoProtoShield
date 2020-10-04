@@ -15,89 +15,27 @@
 
 
 // ------------- BOARD SPECIFIC DEFINES -------------
-#ifdef USE_VERSION_2_0_PINOUT
+// #ifdef USE_VERSION_2_0_PINOUT
 
-#define PIN_LEFT_BUTTON     5
-#define PIN_RIGHT_BUTTON    6
-#define PIN_UP_BUTTON       3
-#define PIN_DOWN_BUTTON     4
-#define PIN_ROT_ENC_BUTTON  8
-#define PIN_ROT_ENC_A       2
-#define PIN_ROT_ENC_B       7
-#define PIN_SHIFT_LATCH     10
-#define PIN_SHIFT_CLOCK     11
-#define PIN_SHIFT_DATA      13
-#define PIN_TEMPERATURE     9
-#define PIN_RGB_LED         12
-#define PIN_POT1            A0
-#define PIN_POT2            A1
-#define PIN_POT3            A2
-#define PIN_PHOTO           A3
-#define PIN_IR_RX           A7
-#define PIN_IR_TX           A6
-
-#else //no "if" here, default to the latest board design
-
-//For version 3.0
-//Button and rotary encoder pins. Only 2 & 3 can have interrupts on the Nano
-//Pinout can be overridden by defining the pin before the #include "NanoProtoShield.h" line
-#ifndef PIN_LEFT_BUTTON
-#define PIN_LEFT_BUTTON     5
-#endif
-#ifndef PIN_RIGHT_BUTTON
-#define PIN_RIGHT_BUTTON    6
-#endif
-#ifndef PIN_UP_BUTTON
-#define PIN_UP_BUTTON       3
-#endif
-#ifndef PIN_DOWN_BUTTON
-#define PIN_DOWN_BUTTON     4
-#endif
-#ifndef PIN_ROT_ENC_BUTTON
-#define PIN_ROT_ENC_BUTTON  8
-#endif
-#ifndef PIN_ROT_ENC_A
-#define PIN_ROT_ENC_A       2
-#endif
-#ifndef PIN_ROT_ENC_B
-#define PIN_ROT_ENC_B       7
-#endif
-#ifndef PIN_SHIFT_LATCH
-#define PIN_SHIFT_LATCH     10
-#endif
-#ifndef PIN_SHIFT_CLOCK
-#define PIN_SHIFT_CLOCK     11
-#endif
-#ifndef PIN_SHIFT_DATA
-#define PIN_SHIFT_DATA      13
-#endif
-#ifndef PIN_TEMPERATURE
-#define PIN_TEMPERATURE     A2
-#endif
-#ifndef PIN_RGB_LED
-#define PIN_RGB_LED         12
-#endif
-#ifndef PIN_POT1
-#define PIN_POT1            A0
-#endif
-#ifndef PIN_POT2
-#define PIN_POT2            A1
-#endif
-#ifndef PIN_POT3
-#define PIN_POT3            A6
-#endif
-#ifndef PIN_PHOTO
-#define PIN_PHOTO           A7
-#endif
-#ifndef PIN_IR_RX
-#define PIN_IR_RX           A3
-#endif
-#ifndef PIN_IR_TX
-#define PIN_IR_TX           9
-#endif
-
-#endif //finish off the #ifdef/else for pinout version.
-
+// #define INDEX_PIN_LEFT_BUTTON     5
+// #define INDEX_PIN_RIGHT_BUTTON    6
+// #define INDEX_PIN_UP_BUTTON       3
+// #define INDEX_PIN_DOWN_BUTTON     4
+// #define INDEX_PIN_ROT_ENC_BUTTON  8
+// #define INDEX_PIN_ROT_ENC_A       2
+// #define INDEX_PIN_ROT_ENC_B       7
+// #define INDEX_PIN_SHIFT_LATCH     10
+// #define INDEX_PIN_SHIFT_CLOCK     11
+// #define INDEX_PIN_SHIFT_DATA      13
+// #define INDEX_PIN_TEMPERATURE     9
+// #define INDEX_PIN_RGB_LED         12
+// #define INDEX_PIN_POT1            A0
+// #define INDEX_PIN_POT2            A1
+// #define INDEX_PIN_POT3            A2
+// #define INDEX_PIN_PHOTO           A3
+// #define INDEX_PIN_IR_RX           A7
+// #define INDEX_PIN_IR_TX           A6
+// #endif
 
 // ------------- RGB LED DEFINES -------------
 // How many NeoPixels are attached to the Arduino?
@@ -117,6 +55,45 @@
 #define ANALOG_TO_VOLTAGE (5.0 / 1023.0) //Multiply by to convert an analog reading to voltage level
 #define VOLTAGE_TO_RGB (255.0 / 5.0) //Multiply by to convert a voltage to an RGB value (0-255)
 
+enum INDEX_PINS {
+    INDEX_PIN_LEFT_BUTTON,
+    INDEX_PIN_RIGHT_BUTTON,
+    INDEX_PIN_UP_BUTTON,
+    INDEX_PIN_DOWN_BUTTON,
+    INDEX_PIN_ROT_ENC_BUTTON,
+    INDEX_PIN_ROT_ENC_A,
+    INDEX_PIN_ROT_ENC_B,
+    INDEX_PIN_SHIFT_LATCH,
+    INDEX_PIN_SHIFT_CLOCK,
+    INDEX_PIN_SHIFT_DATA,
+    INDEX_PIN_TEMPERATURE,
+    INDEX_PIN_RGB_LED,
+    INDEX_PIN_POT1,
+    INDEX_PIN_POT2,
+    INDEX_PIN_POT3,
+    INDEX_PIN_PHOTO,
+    INDEX_PIN_IR_RX,
+    INDEX_PIN_IR_TX,
+    INDEX_PIN_COUNT
+};
+#define PIN_DEFAULT_LEFT_BUTTON     5
+#define PIN_DEFAULT_RIGHT_BUTTON    6
+#define PIN_DEFAULT_UP_BUTTON       3
+#define PIN_DEFAULT_DOWN_BUTTON     4
+#define PIN_DEFAULT_ROT_ENC_BUTTON  8
+#define PIN_DEFAULT_ROT_ENC_A       2
+#define PIN_DEFAULT_ROT_ENC_B       7
+#define PIN_DEFAULT_SHIFT_LATCH     10
+#define PIN_DEFAULT_SHIFT_CLOCK     11
+#define PIN_DEFAULT_SHIFT_DATA      13
+#define PIN_DEFAULT_TEMPERATURE     A2
+#define PIN_DEFAULT_RGB_LED         12
+#define PIN_DEFAULT_POT1            A0
+#define PIN_DEFAULT_POT2            A1
+#define PIN_DEFAULT_POT3            A6
+#define PIN_DEFAULT_PHOTO           A7
+#define PIN_DEFAULT_IR_RX           A3
+#define PIN_DEFAULT_IR_TX           9
 
 enum DISPLAYS { 
     DISPLAY_NONE        = 0,
@@ -169,7 +146,9 @@ class NanoProtoShield {
 
     //begin() should be called in the setup() part of any script that uses a global NanoProtoShield object.
     //Sets up all the I/O pins and begins the member classes and prepares them for use.
-    void begin();
+    void begin(INDEX_PINS pinout[] = NULL);
+
+    byte getPin(INDEX_PINS pin) { return m_pinout[pin]; }
 
     void oledClear();
     void oledDisplay(int clear_after = 0);
@@ -254,10 +233,10 @@ class NanoProtoShield {
     //very easy to miss.
     void rgbSetButtonInterrupt(bool interrupt) {m_rgbInterrupt = interrupt;};
 
-    float pot1Read() {return analogRead(PIN_POT1) * ANALOG_TO_VOLTAGE;}
-    float pot2Read() {return analogRead(PIN_POT2) * ANALOG_TO_VOLTAGE;}
-    float pot3Read() {return analogRead(PIN_POT3) * ANALOG_TO_VOLTAGE;}
-    float lightMeterRead() {return analogRead(PIN_PHOTO) * ANALOG_TO_VOLTAGE;}
+    float pot1Read() {return analogRead(getPin(INDEX_PIN_POT1)) * ANALOG_TO_VOLTAGE;}
+    float pot2Read() {return analogRead(getPin(INDEX_PIN_POT2)) * ANALOG_TO_VOLTAGE;}
+    float pot3Read() {return analogRead(getPin(INDEX_PIN_POT3)) * ANALOG_TO_VOLTAGE;}
+    float lightMeterRead() {return analogRead(getPin(INDEX_PIN_PHOTO)) * ANALOG_TO_VOLTAGE;}
 
     int rotaryRead() {return (m_rotary)? m_rotary->read()/4 : 0;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
     void rotaryWrite(int value) {if(m_rotary) m_rotary->write(value*4);}
@@ -342,17 +321,18 @@ class NanoProtoShield {
     void buttonClearReleaseEvent(BUTTON b){if(b < BUTTON_COUNT) m_buttonReleaseEvents[b] = NULL;};
 
     //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
-    bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(PIN_UP_BUTTON) : 0; }
-    bool buttonDownPressed(){ return (m_features & FEATURE_BUTTON_DOWN)? digitalRead(PIN_DOWN_BUTTON) : 0; }
-    bool buttonRightPressed(){ return (m_features & FEATURE_BUTTON_RIGHT)? digitalRead(PIN_RIGHT_BUTTON) : 0; }
-    bool buttonLeftPressed(){ return (m_features & FEATURE_BUTTON_LEFT)? digitalRead(PIN_LEFT_BUTTON) : 0; }
-    bool buttonRotaryPressed(){ return (m_features & FEATURE_ROT_ENC_BUTTON)? !digitalRead(PIN_ROT_ENC_BUTTON) : 0; }//Hardware has this input inverted (active high)
+    bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(getPin(INDEX_PIN_UP_BUTTON)) : 0; }
+    bool buttonDownPressed(){ return (m_features & FEATURE_BUTTON_DOWN)? digitalRead(getPin(INDEX_PIN_DOWN_BUTTON)) : 0; }
+    bool buttonRightPressed(){ return (m_features & FEATURE_BUTTON_RIGHT)? digitalRead(getPin(INDEX_PIN_RIGHT_BUTTON)) : 0; }
+    bool buttonLeftPressed(){ return (m_features & FEATURE_BUTTON_LEFT)? digitalRead(getPin(INDEX_PIN_LEFT_BUTTON)) : 0; }
+    bool buttonRotaryPressed(){ return (m_features & FEATURE_ROT_ENC_BUTTON)? !digitalRead(getPin(INDEX_PIN_ROT_ENC_BUTTON)) : 0; }//Hardware has this input inverted (active high)
 
     //TODO
     //Need objects, functions, and test mode for IR
 
     private:
     FEATURES                m_features;
+    INDEX_PINS              m_pinout[INDEX_PIN_COUNT];
 
     Adafruit_SSD1306        *m_oled;
     Encoder                 *m_rotary;
@@ -374,11 +354,13 @@ class NanoProtoShield {
     byte                    m_buttonPressed;
     byte                    m_buttonReleased;
 
+
     void (*m_buttonPressEvents[BUTTON_COUNT])(void);
     void (*m_buttonReleaseEvents[BUTTON_COUNT])(void);
 };
 
 int incrementValueWithMaxRollover(int value, int max);
 int decrementValueWithMaxRollover(int value, int max);
+void initializePinIndexToDefault(INDEX_PINS *iPen);
 
 #endif //#ifndef NANOPROTO_H

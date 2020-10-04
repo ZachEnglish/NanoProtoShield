@@ -1,7 +1,21 @@
-// This example sets the hue and brightness of the RGB LEDs based on readings
-// from the acceleromter and gyroscope. The goal is to see them changed by
-// tilting the board different directions.
-// Work in progress, got some seriously odd behavior
+/*  GyroAccRGB.ino
+
+    Purpose:
+      Learn how to get readings from the Gyroscope/acceleromter (MPU6050).
+      Learn how to set the RGB color of the 8 RGB LEDs.
+
+    What it does:
+      This example sets the hue and brightness of the RGB LEDs based on readings
+      from the acceleromter and gyroscope. The goal is to see them changed by
+      tilting the board different directions.
+
+    TODOs (Things that are broken/not yet working/could be improved):
+      Work in progress, got some seriously odd behavior. Not a good demo yet.
+      RGB values calculated seem to be almost random.
+
+    Special Notes:
+      None
+*/
 
 #include "NanoProtoShield.h"
 

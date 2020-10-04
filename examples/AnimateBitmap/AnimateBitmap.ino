@@ -1,6 +1,17 @@
-//The purpose of this example is to show how to animate a bitmap
-//Draws a smiley face and makes it move around the display
-//Draws (hehehe) heavily from the Adafruit SSD1306 example ssd1306_128x64_i2c.ino
+/*  AnimateBitmap.ino
+
+    Purpose:
+      Show how to create a bitmap and draw it on the OLED display
+
+    What it does:
+      Draws a smiley face and makes it move around the display
+
+    TODOs (Things that are broken/not yet working/could be improved):
+        None
+
+    Special Notes:
+      Draws (hehehe) heavily from the Adafruit SSD1306 example ssd1306_128x64_i2c.ino
+*/
 
 #include "NanoProtoShield.h"
 

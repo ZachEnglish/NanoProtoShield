@@ -1,5 +1,17 @@
-// This example displays the state of the UP button on the OLED display.
-// Uses direct reading of the button state (not event driven)
+/*  ShowButtonPress.ino
+
+    Purpose:
+      Direct reading of the button state (not event driven). Simple OLED text.
+
+    What it does:
+      This example displays the state of the UP button on the OLED display.
+
+    TODOs (Things that are broken/not yet working/could be improved):
+      None
+
+    Special Notes:
+      None
+*/
 
 #include "NanoProtoShield.h"
 
