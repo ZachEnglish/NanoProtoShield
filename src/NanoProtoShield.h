@@ -150,6 +150,10 @@ class NanoProtoShield {
 
     byte getPin(INDEX_PINS pin) { return m_pinout[pin]; }
 
+    //Should be called each refresh of the OLED display so new things will be drawn without the old still
+    //hanging around. Wipes the display buffer clean and sets the cursor (for text) at the top of the
+    //display. Still requires oledDisplay() to be called to actually see the change on the physical OLED
+    //as this just updates the buffer.
     void oledClear();
     void oledDisplay(int clear_after = 0);
     void oledInvert(bool i) {if(m_oled) m_oled->invertDisplay(i);}
@@ -241,7 +245,7 @@ class NanoProtoShield {
     int rotaryRead() {return (m_rotary)? m_rotary->read()/4 : 0;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
     void rotaryWrite(int value) {if(m_rotary) m_rotary->write(value*4);}
 
-    //Wrtine left and right out to the 7 segment display digits
+    //Write left and right out to the 7 segment display digits
     //These are raw bytes, so they follow the formatting described where
     //g_map_7seg is defined in NanoProtoShield.cpp
     void shift7segWrite(byte left, byte right);
