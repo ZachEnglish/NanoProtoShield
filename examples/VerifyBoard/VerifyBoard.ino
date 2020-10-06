@@ -58,6 +58,7 @@ void setup() {
 void loop() {
   float lightLevel = 0.0f;
   byte whichBit = 0;
+  //Every test in the list below should have a "if(isFirstTime)" call at the beginning of the test to protect the setup
   bool skipOled = (g_currentTest == TEST_SHIFT_LEDS_FAST || g_currentTest == TEST_7SEG_FAST || g_currentTest == TEST_ROTARY || g_currentTest == TEST_MPU );
   bool isFirstTime = g_lastTest != g_currentTest;
 
