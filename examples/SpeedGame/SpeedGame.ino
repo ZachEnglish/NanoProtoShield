@@ -32,7 +32,7 @@ bool gameInProgress;        //used to know if a game is currently in progress. F
 void setup(){
     g_nps.begin();
 
-    randomSeed(analogRead(A7)); //use the analog input of the photo led to get a random seed value.
+    g_nps.useLightMeterToSeedRandom();
     gameInProgress = false;
     fastestTime = 10000;
 }

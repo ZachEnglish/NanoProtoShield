@@ -241,6 +241,7 @@ class NanoProtoShield {
     float pot2Read() {return analogRead(getPin(INDEX_PIN_POT2)) * ANALOG_TO_VOLTAGE;}
     float pot3Read() {return analogRead(getPin(INDEX_PIN_POT3)) * ANALOG_TO_VOLTAGE;}
     float lightMeterRead() {return analogRead(getPin(INDEX_PIN_PHOTO)) * ANALOG_TO_VOLTAGE;}
+    void useLightMeterToSeedRandom() {randomSeed(analogRead(getPin(INDEX_PIN_PHOTO)));}
 
     int rotaryRead() {return (m_rotary)? m_rotary->read()/4 : 0;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
     void rotaryWrite(int value) {if(m_rotary) m_rotary->write(value*4);}
