@@ -7,7 +7,6 @@
 #include <Adafruit_GFX.h> //for talking to OLED display
 #include <Adafruit_SSD1306.h> //for talking to OLED display
 #include <Adafruit_NeoPixel.h> //for talking to RGB LEDs
-#include <Encoder.h> //for talking to the rotary encoded. Try ClickEncoder?
 #include <OneWire.h> //for talking to one wire devices like the temperature sensor.
 #define REQUIRESALARMS false //saves bytes in the DallasTemperature object by not enabling functionality we don't need/use
 #include <DallasTemperature.h> //for talking to the temperature sensor
@@ -142,7 +141,7 @@ class NanoProtoShield {
     //Class constructor. Initializes all the member classes identified by the features list passed in
     //except for the temperature one because we can save the RAM from having that one always allocated by
     //just putting it on the stack when we want to take a reading.
-    NanoProtoShield(FEATURES features = FEATURE_ALL);
+    NanoProtoShield(FEATURES features = FEATURE_ALL, bool rotaryMomentum = false);
     ~NanoProtoShield();
 
     //begin() should be called in the setup() part of any script that uses a global NanoProtoShield object.
@@ -240,8 +239,8 @@ class NanoProtoShield {
     float lightMeterRead() {return analogRead(getPin(INDEX_PIN_PHOTO)) * ANALOG_TO_VOLTAGE;}
     void useLightMeterToSeedRandom() {randomSeed(analogRead(getPin(INDEX_PIN_PHOTO)));}
 
-    int rotaryRead() {return (m_rotary)? m_rotary->read()/4 : 0;} //Don't know what is wrong, but the Encoder library always updates in increments of 4...
-    void rotaryWrite(int value) {if(m_rotary) m_rotary->write(value*4);}
+    int rotaryRead();
+    void rotaryWrite(int value);
 
     //Write left and right out to the 7 segment display digits
     //These are raw bytes, so they follow the formatting described where
@@ -316,7 +315,6 @@ class NanoProtoShield {
     INDEX_PINS              m_pinout[INDEX_PIN_COUNT];
 
     Adafruit_SSD1306        *m_oled;
-    Encoder                 *m_rotary;
     OneWire                 *m_oneWire;
     DallasTemperature       *m_tempSensor;
     MPU6050                 *m_mpu;

@@ -28,8 +28,7 @@ void setup() {
   whichLed = 0;
   showLed = false;
 
-  g_nps.buttonSetPressEvent(BUTTON_ROTARY, setShow);
-  g_nps.buttonSetReleaseEvent(BUTTON_ROTARY, unsetShow);
+  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_ROT_ENC_BUTTON), flipShow);
 
   g_nps.oledPrintln(F("Turn the knob to change the light. Press the knob to see the light."));
   g_nps.oledDisplay();
@@ -37,7 +36,6 @@ void setup() {
 
 void loop() {
   int rotaryValue = g_nps.rotaryRead();
-  g_nps.buttonCheckForEvent();
 
   if (rotaryValue < 0) {
     rotaryValue += 8;
@@ -51,10 +49,6 @@ void loop() {
     g_nps.shiftClear();
 }
 
-void setShow() {
-  showLed = true;
-}
-
-void unsetShow() {
-  showLed = false;
+void flipShow() {
+  showLed = !showLed;
 }

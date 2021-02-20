@@ -34,7 +34,13 @@ const byte g_map_7seg[] PROGMEM = {
 //Can be bitwise 'or'ed (single '|') together with the other segments in the g_map_7seg to add the decimal point
 #define DEC_7SEG 0b10000000
 
-NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL) {
+static int s_rotaryEncoderValue = 0;
+static byte s_rotaryEncoderPinA;
+static byte s_rotaryEncoderPinB;
+static bool s_rotaryEncoderHasMomentum = false;
+static void rotaryEncoderIsr();
+
+NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL, bool rotaryMomentum = false) {
   //Initialize the class's memory of what data the shift registers have
   m_shift7segLeft  = 0xFF;
   m_shift7segRight = 0xFF;
@@ -45,13 +51,13 @@ NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL) {
   m_temperatureC   = 0;
 
   m_features = features;
+
+  s_rotaryEncoderHasMomentum = rotaryMomentum;
 }
 
 NanoProtoShield::~NanoProtoShield() {
   if(m_oled)
     delete(m_oled);
-  if(m_rotary)
-    delete(m_rotary);
   if(m_oneWire)
     delete(m_oneWire);
   if(m_tempSensor)
@@ -76,7 +82,12 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
     m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
   }
   if( m_features & FEATURE_ROTARY_TWIST ) {
-    m_rotary = new Encoder(getPin(INDEX_PIN_ROT_ENC_B), getPin(INDEX_PIN_ROT_ENC_A)); //this order makes clockwise positive on the NPS
+    //m_rotary = new Encoder(getPin(INDEX_PIN_ROT_ENC_B), getPin(INDEX_PIN_ROT_ENC_A)); //this order makes clockwise positive on the NPS
+    s_rotaryEncoderPinA = getPin(INDEX_PIN_ROT_ENC_A);
+    s_rotaryEncoderPinB = getPin(INDEX_PIN_ROT_ENC_B);
+    
+    pinSetEvent(getPin(INDEX_PIN_ROT_ENC_A), rotaryEncoderIsr);
+    pinSetEvent(getPin(INDEX_PIN_ROT_ENC_B), rotaryEncoderIsr);
   }
   m_oneWire = NULL; //object created and destroyed on every read
   m_tempSensor = NULL; //object created and destroyed on every read
@@ -357,6 +368,14 @@ void NanoProtoShield::pinClearEvent(byte pin, void (*buttonEvent)(void), const u
   detachPinChangeInterrupt(digitalPinToPCINT(pin));
 }
 
+int NanoProtoShield::rotaryRead(){
+  return s_rotaryEncoderValue;
+}
+
+void NanoProtoShield::rotaryWrite(int value){
+  s_rotaryEncoderValue = value;
+}
+
 int incrementValueWithMaxRollover(int value, int max) {
   return (value + 1) % max;
 }
@@ -389,4 +408,65 @@ void initializePinIndexToDefault(INDEX_PINS *iPen) {
     iPen[INDEX_PIN_IR_RX]          = PIN_DEFAULT_IR_RX;
     iPen[INDEX_PIN_IR_TX]          = PIN_DEFAULT_IR_TX;
   }
+}
+
+// Interrupt Service Routine for rotary encoder.
+// Stolen from Nick Gammon @ https://forum.arduino.cc/index.php?topic=62026.0 
+static void rotaryEncoderIsr()
+{
+  static boolean ready;
+  static unsigned long lastFiredTime;
+  static byte pinA, pinB;
+    
+  byte newPinA = digitalRead(s_rotaryEncoderPinA);
+  byte newPinB = digitalRead(s_rotaryEncoderPinB);
+
+  // Forward is: LH/HH or HL/LL
+  // Reverse is: HL/HH or LH/LL
+
+  // so we only record a turn on both the same (HH or LL)
+
+  if (newPinA == newPinB)
+    {
+    if (ready)
+      {
+      long increment = 1;
+
+      if(s_rotaryEncoderHasMomentum){
+        // if they turn the encoder faster, make the count go up more
+        // (use for humans, not for measuring ticks on a machine)
+        unsigned long now = millis ();
+        unsigned long interval = now - lastFiredTime;
+        lastFiredTime = now;
+        
+        if (interval < 10)
+          increment = 5;
+        else if (interval < 20)
+          increment = 3;
+        else if (interval < 50)
+          increment = 2;
+      }
+        
+      if (newPinA == HIGH)  // must be HH now
+        {
+        if (pinA == LOW)
+          s_rotaryEncoderValue -= increment;
+        else
+          s_rotaryEncoderValue += increment;
+        }
+      else
+        {                  // must be LL now
+        if (pinA == LOW)  
+          s_rotaryEncoderValue += increment;
+        else
+          s_rotaryEncoderValue -= increment;        
+        }
+      ready = false;
+      }  // end of being ready
+    }  // end of completed click
+  else
+    ready = true;
+    
+  pinA = newPinA;
+  pinB = newPinB;
 }

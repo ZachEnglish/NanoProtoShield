@@ -28,9 +28,9 @@ void setup() {
   g_rightPressed = g_nps.buttonRightPressed();
 
   //set the interrupt events for the left and right buttons. Calls the same funtion regardless of pressed or released. Just sets the state.
-  g_nps.buttonSetEvent(BUTTON_LEFT, leftPressed, CHANGE);
+  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_LEFT_BUTTON), leftPressed, CHANGE);
 
-  g_nps.buttonSetEvent(BUTTON_RIGHT, rightPressed, CHANGE);
+  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_RIGHT_BUTTON), rightPressed, CHANGE);
 }
 
 void loop() {
