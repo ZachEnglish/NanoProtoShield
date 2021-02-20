@@ -40,7 +40,7 @@ static byte s_rotaryEncoderPinB;
 static bool s_rotaryEncoderHasMomentum = false;
 static void rotaryEncoderIsr();
 
-NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL, bool rotaryMomentum = false) {
+NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL) {
   //Initialize the class's memory of what data the shift registers have
   m_shift7segLeft  = 0xFF;
   m_shift7segRight = 0xFF;
@@ -51,8 +51,6 @@ NanoProtoShield::NanoProtoShield(FEATURES features = FEATURE_ALL, bool rotaryMom
   m_temperatureC   = 0;
 
   m_features = features;
-
-  s_rotaryEncoderHasMomentum = rotaryMomentum;
 }
 
 NanoProtoShield::~NanoProtoShield() {
@@ -374,6 +372,18 @@ int NanoProtoShield::rotaryRead(){
 
 void NanoProtoShield::rotaryWrite(int value){
   s_rotaryEncoderValue = value;
+}
+
+void NanoProtoShield::rotaryEnableMomemtum(){
+  s_rotaryEncoderHasMomentum = true;
+}
+
+void NanoProtoShield::rotaryDisableMomemtum(){
+  s_rotaryEncoderHasMomentum = false;
+}
+
+bool NanoProtoShield::rotaryGetMomemtum(){
+  return s_rotaryEncoderHasMomentum;
 }
 
 int incrementValueWithMaxRollover(int value, int max) {

@@ -141,7 +141,7 @@ class NanoProtoShield {
     //Class constructor. Initializes all the member classes identified by the features list passed in
     //except for the temperature one because we can save the RAM from having that one always allocated by
     //just putting it on the stack when we want to take a reading.
-    NanoProtoShield(FEATURES features = FEATURE_ALL, bool rotaryMomentum = false);
+    NanoProtoShield(FEATURES features = FEATURE_ALL);
     ~NanoProtoShield();
 
     //begin() should be called in the setup() part of any script that uses a global NanoProtoShield object.
@@ -241,6 +241,9 @@ class NanoProtoShield {
 
     int rotaryRead();
     void rotaryWrite(int value);
+    void rotaryEnableMomemtum();
+    void rotaryDisableMomemtum();
+    bool rotaryGetMomemtum();
 
     //Write left and right out to the 7 segment display digits
     //These are raw bytes, so they follow the formatting described where
