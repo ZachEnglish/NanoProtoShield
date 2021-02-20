@@ -27,18 +27,14 @@ void setup() {
   g_leftPressed = g_nps.buttonLeftPressed();
   g_rightPressed = g_nps.buttonRightPressed();
 
-  //set the events for the left and right buttons. Calls the same funtion regardless of pressed or released. Just sets the state.
-  //These functions (leftPressed & rightPressed) will get called when the corresponding event is calculated by buttonCheckForEvent()
-  g_nps.buttonSetPressEvent(BUTTON_LEFT, leftPressed);
-  g_nps.buttonSetReleaseEvent(BUTTON_LEFT, leftPressed);
+  //set the interrupt events for the left and right buttons. Calls the same funtion regardless of pressed or released. Just sets the state.
+  g_nps.buttonSetEvent(BUTTON_LEFT, leftPressed, CHANGE);
 
-  g_nps.buttonSetPressEvent(BUTTON_RIGHT, rightPressed);
-  g_nps.buttonSetReleaseEvent(BUTTON_RIGHT, rightPressed);
+  g_nps.buttonSetEvent(BUTTON_RIGHT, rightPressed, CHANGE);
 }
 
 void loop() {
   g_nps.oledClear();
-  g_nps.buttonCheckForEvent(); //when using button events you need to check in the loop to catch the state change
 
   g_nps.oledPrintln(F("Left button is: "));
   g_nps.oledPrintln(g_leftPressed ? F("Pressed") : F("Not pressed"));

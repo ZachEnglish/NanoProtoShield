@@ -12,6 +12,7 @@
 #define REQUIRESALARMS false //saves bytes in the DallasTemperature object by not enabling functionality we don't need/use
 #include <DallasTemperature.h> //for talking to the temperature sensor
 #include <MPU6050_light.h> //for talking to the gyro/accelerometer
+#include "PinChangeInterrupt.h" //for getting interrupts on more than just pins 2 & 3.
 
 
 // ------------- BOARD SPECIFIC DEFINES -------------
@@ -232,10 +233,6 @@ class NanoProtoShield {
     void rgbSetBrightness(uint8_t brightness)   {if(m_rgb) m_rgb->setBrightness(brightness);};
     void rgbShow() {m_rgb->show();};
     uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
-    //Set to true if you want the RGB color wipe and rainbow functions to check for button events
-    //Not doing this makes non-interrupt driven (anything other than the UP button) button presses
-    //very easy to miss.
-    void rgbSetButtonInterrupt(bool interrupt) {m_rgbInterrupt = interrupt;};
 
     float pot1Read() {return analogRead(getPin(INDEX_PIN_POT1)) * ANALOG_TO_VOLTAGE;}
     float pot2Read() {return analogRead(getPin(INDEX_PIN_POT2)) * ANALOG_TO_VOLTAGE;}
@@ -291,7 +288,7 @@ class NanoProtoShield {
     float mpuGetAngleY(){ return (m_mpu)? m_mpu->getAngleY() : 0; }
     float mpuGetAngleZ(){ return (m_mpu)? m_mpu->getAngleZ() : 0; }
 
-    //Calling interrupt let's the NanoProtoShield know that any function which may take a while (e.g. RGB sequences) should
+    //Calling interrupt lets the NanoProtoShield know that any function which may take a while (e.g. RGB sequences) should
     //check to see if they need to do an early abort. This allows for a faster UI response when using buttons for navigation
     void interrupt() {m_interrupt++;}
 
@@ -299,31 +296,10 @@ class NanoProtoShield {
     //so a display does not flash when it is in use yet it is desired to
     //ensure the rest of the displays are cleared out.
     void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
-
-    //buttonCheckForEvent must be called regularly (e.g. in the loop function) for the event system to work. This will call
-    //any appropriate event handlers if a state transition which has a handler is calculated. If there is not a event handler
-    //for any calculated button event, it sets up the internal state for use by the buttonPressed() and buttonReleased()
-    //functions
-    void buttonCheckForEvent();
-
-    //buttonPressed will return if a given button has been calculated to have been pressed (via a buttonCheckForEvent() call)
-    //You may optionally clear the flag indicating the press.
-    bool buttonPressed(BUTTON b, bool clear = true);
-
-    //buttonReleased will return if a given button has been calculated to have been released (via a buttonCheckForEvent() call)
-    //You may optionally clear the flag indicating the release.
-    bool buttonReleased(BUTTON b, bool clear = true);
-
-    //Set up event handlers for button presses and releases calculated by buttonCheckForEvent() calls.
-    //Cannot be used with buttonPressed() or buttonReleased() as it clears the flag automatically
-    //These events are only triggered when buttonCheckForEvent() calculates a change, so if the update loop is too slow,
-    //they could miss events
-    void buttonSetPressEvent(BUTTON b, void (*buttenEvent)(void));
-    void buttonSetReleaseEvent(BUTTON b, void (*buttenEvent)(void));
-
-    //Clear out event handlers that have been set already
-    void buttonClearPressEvent(BUTTON b) {if(b < BUTTON_COUNT) m_buttonPressEvents[b] = NULL;};
-    void buttonClearReleaseEvent(BUTTON b){if(b < BUTTON_COUNT) m_buttonReleaseEvents[b] = NULL;};
+    
+    //Set up event handlers for button presses and releases on pin change interrupts. Can interrupt on CHANGE, FALLING, or RAISING
+    void pinSetEvent(byte pin, void (*buttenEvent)(void), const uint8_t mode = RISING);
+    void pinClearEvent(byte pin, void (*buttenEvent)(void), const uint8_t mode = RISING);
 
     //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
     bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(getPin(INDEX_PIN_UP_BUTTON)) : 0; }
@@ -351,17 +327,12 @@ class NanoProtoShield {
     byte                    m_shiftLed;
 
     volatile byte           m_interrupt;
-    bool                    m_rgbInterrupt;
 
     float                   m_temperatureC;
 
     byte                    m_buttonState;
     byte                    m_buttonPressed;
     byte                    m_buttonReleased;
-
-
-    void (*m_buttonPressEvents[BUTTON_COUNT])(void);
-    void (*m_buttonReleaseEvents[BUTTON_COUNT])(void);
 };
 
 int incrementValueWithMaxRollover(int value, int max);

@@ -47,12 +47,11 @@ void setUpTest(const __FlashStringHelper *title, const __FlashStringHelper *desc
 void setup() {
   g_nps.begin();
   g_counter = 0;
-  g_nps.clearAllDisplays();
   g_nps.oledPrint(F("Booting and calculating MPU6050 offsets, please leave level"));
   g_nps.oledDisplay();
   g_nps.mpuCalculateOffsets(1000);
   g_nps.clearAllDisplays();
-  attachInterrupt( digitalPinToInterrupt(g_nps.getPin(INDEX_PIN_UP_BUTTON)), isrIncrementTest, FALLING ); //make the UP button run the function that advances the test
+  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_UP_BUTTON), isrIncrementTest, FALLING); //make the UP button run the function that advances the test
 }
 
 void loop() {

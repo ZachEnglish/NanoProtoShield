@@ -78,18 +78,13 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
   if( m_features & FEATURE_ROTARY_TWIST ) {
     m_rotary = new Encoder(getPin(INDEX_PIN_ROT_ENC_B), getPin(INDEX_PIN_ROT_ENC_A)); //this order makes clockwise positive on the NPS
   }
-  m_oneWire = NULL;
-  m_tempSensor = NULL;
+  m_oneWire = NULL; //object created and destroyed on every read
+  m_tempSensor = NULL; //object created and destroyed on every read
   if( m_features & FEATURE_MPU ) {
     m_mpu = new MPU6050(Wire);
   }
   if( m_features & FEATURE_RGB ) {
     m_rgb = new Adafruit_NeoPixel(RGB_LED_COUNT, getPin(INDEX_PIN_RGB_LED), NEO_GRB + NEO_KHZ800);
-  }
-
-  for(int i = 0; i < BUTTON_COUNT; i++){
-    m_buttonPressEvents[i] = NULL;
-    m_buttonReleaseEvents[i] = NULL;
   }
 
   //Set up shift register pins
@@ -132,7 +127,7 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
   // is half of the entire stack! Easy to blow it.
   if(m_oled){
     if (!m_oled->begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-      Serial.println(F("SSD1306 allocation failed"));
+      Serial.println(F("SSD1306 allocation failed. Not enough stack memory for all of this."));
       for (;;); // Don't proceed, loop forever
     }
   
@@ -151,8 +146,6 @@ void NanoProtoShield::rgbColorWipe(uint8_t r, uint8_t g, uint8_t b, int wait) {
     for (int i = 0; i < m_rgb->numPixels(); i++) { // For each pixel in strip...
       m_rgb->setPixelColor(i, color);         //  Set pixel's color (in RAM)
       m_rgb->show();                          //  Update strip to match
-      if(m_rgbInterrupt)
-        buttonCheckForEvent();
       if(m_interrupt != starting_interrupt)
         return;
       delay(wait);                           //  Pause for a moment
@@ -181,8 +174,6 @@ void NanoProtoShield::rgbRainbow(int wait) {
         m_rgb->setPixelColor(i, m_rgb->gamma32(m_rgb->ColorHSV(pixelHue)));
       }
       m_rgb->show(); // Update strip with new contents
-      if(m_rgbInterrupt)
-        buttonCheckForEvent();
       if(m_interrupt != starting_interrupt)
         return;
       delay(wait);  // Pause for a moment
@@ -357,68 +348,13 @@ void NanoProtoShield::mpuCalculateOffsets(int wait){
   }
 }
 
-void NanoProtoShield::buttonCheckForEvent(){
-  byte old_state = m_buttonState;
 
-  m_buttonState = 0;
-
-  if(m_features & FEATURE_BUTTON_UP){
-    m_buttonState |= digitalRead(getPin(INDEX_PIN_UP_BUTTON)) << BUTTON_UP;
-  }
-  if(m_features & FEATURE_BUTTON_DOWN){
-    m_buttonState |= digitalRead(getPin(INDEX_PIN_DOWN_BUTTON)) << BUTTON_DOWN;
-  }
-  if(m_features & FEATURE_BUTTON_LEFT){
-    m_buttonState |= digitalRead(getPin(INDEX_PIN_LEFT_BUTTON)) << BUTTON_LEFT;
-  }
-  if(m_features & FEATURE_BUTTON_RIGHT){
-    m_buttonState |= digitalRead(getPin(INDEX_PIN_RIGHT_BUTTON)) << BUTTON_RIGHT;
-  }
-  if(m_features & FEATURE_ROT_ENC_BUTTON){
-    m_buttonState |= !digitalRead(getPin(INDEX_PIN_ROT_ENC_BUTTON)) << BUTTON_ROTARY;//Hardware has this input inverted (active high)
-  }
-
-  m_buttonPressed = m_buttonPressed | (m_buttonState &(~old_state));
-  m_buttonReleased = m_buttonReleased | ((~m_buttonState) &(old_state)); 
-
-  for(int i = 0; i < BUTTON_COUNT; i++){
-    if(m_buttonPressEvents[i] && buttonPressed(i))
-      m_buttonPressEvents[i]();
-    else if(m_buttonReleaseEvents[i] && buttonReleased(i))
-      m_buttonReleaseEvents[i]();
-  }
+void NanoProtoShield::pinSetEvent(byte pin, void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(pin), buttonEvent, mode);
 }
 
-bool NanoProtoShield::buttonPressed(BUTTON b, bool clear = true){
-  if(bitRead(m_buttonPressed, b))
-  {
-    if(clear)
-    {
-      m_buttonPressed = bitClear(m_buttonPressed, b);
-    }
-    return true;
-  }
-  return false;
-}
-
-bool NanoProtoShield::buttonReleased(BUTTON b, bool clear = true){
-  if(bitRead(m_buttonReleased, b))
-  {
-    if(clear)
-    {
-      m_buttonReleased = bitClear(m_buttonReleased, b);
-    }
-    return true;
-  }
-  return false;
-}
-
-void NanoProtoShield::buttonSetPressEvent(BUTTON b, void (*buttonEvent)(void)){
-  m_buttonPressEvents[b] = buttonEvent; //TODO: add checking for 'b'
-}
-
-void NanoProtoShield::buttonSetReleaseEvent(BUTTON b, void (*buttonEvent)(void)){
-  m_buttonReleaseEvents[b] = buttonEvent;
+void NanoProtoShield::pinClearEvent(byte pin, void (*buttonEvent)(void), const uint8_t mode = RISING){
+  detachPinChangeInterrupt(digitalPinToPCINT(pin));
 }
 
 int incrementValueWithMaxRollover(int value, int max) {
