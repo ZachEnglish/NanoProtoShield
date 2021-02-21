@@ -299,9 +299,17 @@ class NanoProtoShield {
     //ensure the rest of the displays are cleared out.
     void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
     
-    //Set up event handlers for button presses and releases on pin change interrupts. Can interrupt on CHANGE, FALLING, or RAISING
-    void pinSetEvent(byte pin, void (*buttenEvent)(void), const uint8_t mode = RISING);
-    void pinClearEvent(byte pin, void (*buttenEvent)(void), const uint8_t mode = RISING);
+    //Set up interrupts for button presses and releases on pin change interrupts. Can interrupt on CHANGE, FALLING, or RAISING
+    void setUpButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void setDownButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void setRightButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void setLeftButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void clearUpButtonInterrupt();
+    void clearDownButtonInterrupt();
+    void clearRightButtonInterrupt();
+    void clearLeftButtonInterrupt();
+    void clearRotaryEncoderButtonInterrupt();
 
     //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
     bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(getPin(INDEX_PIN_UP_BUTTON)) : false; }

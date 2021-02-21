@@ -80,12 +80,11 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
     m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
   }
   if( m_features & FEATURE_ROTARY_TWIST ) {
-    //m_rotary = new Encoder(getPin(INDEX_PIN_ROT_ENC_B), getPin(INDEX_PIN_ROT_ENC_A)); //this order makes clockwise positive on the NPS
     s_rotaryEncoderPinA = getPin(INDEX_PIN_ROT_ENC_A);
     s_rotaryEncoderPinB = getPin(INDEX_PIN_ROT_ENC_B);
     
-    pinSetEvent(getPin(INDEX_PIN_ROT_ENC_A), rotaryEncoderIsr);
-    pinSetEvent(getPin(INDEX_PIN_ROT_ENC_B), rotaryEncoderIsr);
+    attachPinChangeInterrupt(digitalPinToPCINT(s_rotaryEncoderPinA), rotaryEncoderIsr, RISING);
+    attachPinChangeInterrupt(digitalPinToPCINT(s_rotaryEncoderPinB), rotaryEncoderIsr, RISING);
   }
   m_oneWire = NULL; //object created and destroyed on every read
   m_tempSensor = NULL; //object created and destroyed on every read
@@ -357,12 +356,44 @@ void NanoProtoShield::mpuCalculateOffsets(int wait){
   }
 }
 
-void NanoProtoShield::pinSetEvent(byte pin, void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(pin), buttonEvent, mode);
+void NanoProtoShield::setUpButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_UP_BUTTON)), buttonEvent, mode);
 }
 
-void NanoProtoShield::pinClearEvent(byte pin, void (*buttonEvent)(void), const uint8_t mode = RISING){
-  detachPinChangeInterrupt(digitalPinToPCINT(pin));
+void NanoProtoShield::setDownButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_DOWN_BUTTON)), buttonEvent, mode);
+}
+
+void NanoProtoShield::setRightButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_RIGHT_BUTTON)), buttonEvent, mode);
+}
+
+void NanoProtoShield::setLeftButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_LEFT_BUTTON)), buttonEvent, mode);
+}
+
+void NanoProtoShield::setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_ROT_ENC_BUTTON)), buttonEvent, mode);
+}
+
+void NanoProtoShield::clearUpButtonInterrupt(){
+  detachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_UP_BUTTON)));
+}
+
+void NanoProtoShield::clearDownButtonInterrupt(){
+  detachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_DOWN_BUTTON)));
+}
+
+void NanoProtoShield::clearRightButtonInterrupt(){
+  detachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_RIGHT_BUTTON)));
+}
+
+void NanoProtoShield::clearLeftButtonInterrupt(){
+  detachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_LEFT_BUTTON)));
+}
+
+void NanoProtoShield::clearRotaryEncoderButtonInterrupt(){
+  detachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_ROT_ENC_BUTTON)));
 }
 
 int NanoProtoShield::rotaryRead(){

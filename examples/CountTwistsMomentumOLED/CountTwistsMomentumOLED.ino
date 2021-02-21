@@ -23,7 +23,7 @@ NanoProtoShield g_nps;
 void setup() {
   g_nps.begin();
 
-  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_ROT_ENC_BUTTON), changeMomemtum, FALLING);
+  g_nps.setRotaryEncoderButtonInterrupt(changeMomemtum, FALLING);
 }
 
 void loop() {

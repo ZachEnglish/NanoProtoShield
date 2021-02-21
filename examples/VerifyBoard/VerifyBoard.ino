@@ -51,7 +51,7 @@ void setup() {
   g_nps.oledDisplay();
   g_nps.mpuCalculateOffsets(1000);
   g_nps.clearAllDisplays();
-  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_UP_BUTTON), isrIncrementTest, FALLING); //make the UP button run the function that advances the test
+  g_nps.setUpButtonInterrupt(isrIncrementTest, FALLING); //make the UP button run the function that advances the test
 }
 
 void loop() {
