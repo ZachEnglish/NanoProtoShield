@@ -4,7 +4,8 @@
       Event driven setting of buttons. Simple OLED text.
 
     What it does:
-      This example displays the state of the LEFT and RIGHT buttons on the OLED display.
+      This example displays the number of times the LEFT, RIGHT and DOWN buttons have
+      had their events triggered using the OLED display.
 
     TODOs (Things that are broken/not yet working/could be improved):
       None
