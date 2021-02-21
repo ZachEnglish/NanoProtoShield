@@ -28,7 +28,7 @@ void setup() {
   whichLed = 0;
   showLed = false;
 
-  g_nps.pinSetEvent(g_nps.getPin(INDEX_PIN_ROT_ENC_BUTTON), flipShow);
+  g_nps.setRotaryEncoderButtonInterrupt(flipShow);
 
   g_nps.oledPrintln(F("Turn the knob to change the light. Press the knob to see the light."));
   g_nps.oledDisplay();
