@@ -357,7 +357,6 @@ void NanoProtoShield::mpuCalculateOffsets(int wait){
   }
 }
 
-
 void NanoProtoShield::pinSetEvent(byte pin, void (*buttonEvent)(void), const uint8_t mode = RISING){
   attachPinChangeInterrupt(digitalPinToPCINT(pin), buttonEvent, mode);
 }

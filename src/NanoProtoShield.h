@@ -304,11 +304,11 @@ class NanoProtoShield {
     void pinClearEvent(byte pin, void (*buttenEvent)(void), const uint8_t mode = RISING);
 
     //Simple functions to directly read the CURRENT state of a button. Pressed is true, unpressed is false. Have to poll on your own
-    bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(getPin(INDEX_PIN_UP_BUTTON)) : 0; }
-    bool buttonDownPressed(){ return (m_features & FEATURE_BUTTON_DOWN)? digitalRead(getPin(INDEX_PIN_DOWN_BUTTON)) : 0; }
-    bool buttonRightPressed(){ return (m_features & FEATURE_BUTTON_RIGHT)? digitalRead(getPin(INDEX_PIN_RIGHT_BUTTON)) : 0; }
-    bool buttonLeftPressed(){ return (m_features & FEATURE_BUTTON_LEFT)? digitalRead(getPin(INDEX_PIN_LEFT_BUTTON)) : 0; }
-    bool buttonRotaryPressed(){ return (m_features & FEATURE_ROT_ENC_BUTTON)? !digitalRead(getPin(INDEX_PIN_ROT_ENC_BUTTON)) : 0; }//Hardware has this input inverted (active high)
+    bool buttonUpPressed(){ return (m_features & FEATURE_BUTTON_UP)? digitalRead(getPin(INDEX_PIN_UP_BUTTON)) : false; }
+    bool buttonDownPressed(){ return (m_features & FEATURE_BUTTON_DOWN)? digitalRead(getPin(INDEX_PIN_DOWN_BUTTON)) : false; }
+    bool buttonRightPressed(){ return (m_features & FEATURE_BUTTON_RIGHT)? digitalRead(getPin(INDEX_PIN_RIGHT_BUTTON)) : false; }
+    bool buttonLeftPressed(){ return (m_features & FEATURE_BUTTON_LEFT)? digitalRead(getPin(INDEX_PIN_LEFT_BUTTON)) : false; }
+    bool buttonRotaryPressed(){ return (m_features & FEATURE_ROT_ENC_BUTTON)? !digitalRead(getPin(INDEX_PIN_ROT_ENC_BUTTON)) : false; }//Hardware has this input inverted (active high)
 
     //TODO
     //Need objects, functions, and test mode for IR
