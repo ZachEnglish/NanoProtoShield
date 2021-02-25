@@ -14,29 +14,6 @@
 #include "PinChangeInterrupt.h" //for getting interrupts on more than just pins 2 & 3.
 
 
-// ------------- BOARD SPECIFIC DEFINES -------------
-// #ifdef USE_VERSION_2_0_PINOUT
-
-// #define INDEX_PIN_LEFT_BUTTON     5
-// #define INDEX_PIN_RIGHT_BUTTON    6
-// #define INDEX_PIN_UP_BUTTON       3
-// #define INDEX_PIN_DOWN_BUTTON     4
-// #define INDEX_PIN_ROT_ENC_BUTTON  8
-// #define INDEX_PIN_ROT_ENC_A       2
-// #define INDEX_PIN_ROT_ENC_B       7
-// #define INDEX_PIN_SHIFT_LATCH     10
-// #define INDEX_PIN_SHIFT_CLOCK     11
-// #define INDEX_PIN_SHIFT_DATA      13
-// #define INDEX_PIN_TEMPERATURE     9
-// #define INDEX_PIN_RGB_LED         12
-// #define INDEX_PIN_POT1            A0
-// #define INDEX_PIN_POT2            A1
-// #define INDEX_PIN_POT3            A2
-// #define INDEX_PIN_PHOTO           A3
-// #define INDEX_PIN_IR_RX           A7
-// #define INDEX_PIN_IR_TX           A6
-// #endif
-
 // ------------- RGB LED DEFINES -------------
 // How many NeoPixels are attached to the Arduino?
 #define RGB_LED_COUNT 8
@@ -53,7 +30,7 @@
 
 
 #define ANALOG_TO_VOLTAGE (5.0 / 1023.0) //Multiply by to convert an analog reading to voltage level
-#define VOLTAGE_TO_RGB (255.0 / 5.0) //Multiply by to convert a voltage to an RGB value (0-255)
+#define VOLTAGE_TO_RGB (255.0 / 5.0) //Multiply by to convert a voltage to an RGB value (0-255) TODO: Make this a macro with variable...
 
 enum INDEX_PINS {
     INDEX_PIN_LEFT_BUTTON,
