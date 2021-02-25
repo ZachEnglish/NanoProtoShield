@@ -105,6 +105,8 @@ enum DISPLAYS {
 
 enum BUTTON { BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_ROTARY, BUTTON_COUNT };
 
+enum BUTTON_ACTION { BUTTON_PRESSED, BUTTON_RELEASED, BUTTON_CHANGED };
+
 enum FEATURES {
     FEATURE_NONE            = 0, //please tell me why you are using this
     FEATURE_OLED            = bit(0),
@@ -300,11 +302,11 @@ class NanoProtoShield {
     void clearAllDisplays(DISPLAYS exception = DISPLAY_NONE);
     
     //Set up interrupts for button presses and releases on pin change interrupts. Can interrupt on CHANGE, FALLING, or RAISING
-    void setUpButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
-    void setDownButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
-    void setRightButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
-    void setLeftButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
-    void setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING);
+    void setUpButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED);
+    void setDownButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED);
+    void setRightButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED);
+    void setLeftButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED);
+    void setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED);
     void clearUpButtonInterrupt();
     void clearDownButtonInterrupt();
     void clearRightButtonInterrupt();

@@ -356,24 +356,42 @@ void NanoProtoShield::mpuCalculateOffsets(int wait){
   }
 }
 
-void NanoProtoShield::setUpButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_UP_BUTTON)), buttonEvent, mode);
+uint8_t buttonActionToInterruptType(BUTTON_ACTION ba, bool isRotary){
+  if(BUTTON_CHANGED == ba){
+    return CHANGE;
+  }
+  
+  if(isRotary){
+    if(BUTTON_PRESSED == ba){
+      return FALLING;
+    }
+    return RISING;
+  }
+  
+  if(BUTTON_PRESSED == ba){
+    return RISING;
+  }
+  return FALLING;
 }
 
-void NanoProtoShield::setDownButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_DOWN_BUTTON)), buttonEvent, mode);
+void NanoProtoShield::setUpButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_UP_BUTTON)), buttonEvent, buttonActionToInterruptType(ba, false));
 }
 
-void NanoProtoShield::setRightButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_RIGHT_BUTTON)), buttonEvent, mode);
+void NanoProtoShield::setDownButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_DOWN_BUTTON)), buttonEvent, buttonActionToInterruptType(ba, false));
 }
 
-void NanoProtoShield::setLeftButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_LEFT_BUTTON)), buttonEvent, mode);
+void NanoProtoShield::setRightButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_RIGHT_BUTTON)), buttonEvent, buttonActionToInterruptType(ba, false));
 }
 
-void NanoProtoShield::setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const uint8_t mode = RISING){
-  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_ROT_ENC_BUTTON)), buttonEvent, mode);
+void NanoProtoShield::setLeftButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_LEFT_BUTTON)), buttonEvent, buttonActionToInterruptType(ba, false));
+}
+
+void NanoProtoShield::setRotaryEncoderButtonInterrupt(void (*buttonEvent)(void), const BUTTON_ACTION ba = BUTTON_PRESSED){
+  attachPinChangeInterrupt(digitalPinToPCINT(getPin(INDEX_PIN_ROT_ENC_BUTTON)), buttonEvent, buttonActionToInterruptType(ba, true));
 }
 
 void NanoProtoShield::clearUpButtonInterrupt(){

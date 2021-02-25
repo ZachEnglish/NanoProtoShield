@@ -28,7 +28,7 @@ void setup() {
   whichLed = 0;
   showLed = false;
 
-  g_nps.setRotaryEncoderButtonInterrupt(flipShow);
+  g_nps.setRotaryEncoderButtonInterrupt(flipShow, BUTTON_CHANGED);
 
   g_nps.oledPrintln(F("Turn the knob to change the light. Press the knob to see the light."));
   g_nps.oledDisplay();
