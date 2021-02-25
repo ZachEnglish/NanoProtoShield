@@ -1,11 +1,11 @@
-/*  ShowButtonPressEvent.ino
+/*  ShowButtonPressInterrupt.ino
 
     Purpose:
-      Event driven setting of buttons. Simple OLED text.
+      Interrupt driven setting of buttons. Simple OLED text.
 
     What it does:
-      This example displays the number of times the LEFT, RIGHT and DOWN buttons have
-      had their events triggered using the OLED display.
+      This example displays the number of times the LEFT, RIGHT, DOWN, and ROT buttons have
+      had their interrupts triggered using the OLED display.
 
     TODOs (Things that are broken/not yet working/could be improved):
       None
@@ -26,7 +26,6 @@ volatile int g_rotCount = 0;
 void setup() {
   g_nps.begin();
 
-  //set the interrupt events for the left and right buttons. Calls the same funtion regardless of pressed or released. Just sets the state.
   g_nps.setLeftButtonInterrupt(leftPressed, BUTTON_PRESSED);
 
   g_nps.setRightButtonInterrupt(rightPressed, BUTTON_RELEASED);
@@ -58,7 +57,7 @@ void loop() {
   g_nps.oledDisplay();
 }
 
-//called by the button event. Needs to set the current state of the button
+//called by the button interrupt
 void leftPressed() {
   g_leftCount++;
 }
