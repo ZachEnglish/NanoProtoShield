@@ -211,6 +211,7 @@ class NanoProtoShield {
     void rgbSetBrightness(uint8_t brightness)   {if(m_rgb) m_rgb->setBrightness(brightness);};
     void rgbShow() {m_rgb->show();};
     uint32_t rgbGetColorFromHsv(uint16_t hue, uint8_t sat=255, uint8_t val=255) {return Adafruit_NeoPixel::ColorHSV(hue,sat,val);}
+    uint32_t rgbGetColorFromRGB(uint8_t r, uint8_t g, uint8_t b) {return Adafruit_NeoPixel::Color(r,g,b);}
 
     float pot1Read() {return analogRead(getPin(INDEX_PIN_POT1)) * ANALOG_TO_VOLTAGE;}
     float pot2Read() {return analogRead(getPin(INDEX_PIN_POT2)) * ANALOG_TO_VOLTAGE;}
