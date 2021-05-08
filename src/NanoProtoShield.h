@@ -99,7 +99,8 @@ enum FEATURES {
     FEATURE_IR_TX           = bit(10),
     FEATURE_IR_RX           = bit(11)
     };
-#define FEATURE_ALL (FEATURE_OLED           | \
+#define FEATURE_ALL ((FEATURES) \
+                    (FEATURE_OLED           | \
                      FEATURE_ROTARY_TWIST   | \
                      FEATURE_ROT_ENC_BUTTON | \
                      FEATURE_MPU            | \
@@ -110,7 +111,7 @@ enum FEATURES {
                      FEATURE_BUTTON_LEFT    | \
                      FEATURE_BUTTON_RIGHT   | \
                      FEATURE_IR_TX          | \
-                     FEATURE_IR_RX)
+                     FEATURE_IR_RX) )
 
 
 //Declare class object to abstract and hide many of the complexities of the board

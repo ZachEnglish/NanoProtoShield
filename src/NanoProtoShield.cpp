@@ -76,9 +76,6 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
     initializePinIndexToDefault(m_pinout);
   }
 
-  if( m_features & FEATURE_OLED ){
-    m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
-  }
   if( m_features & FEATURE_ROTARY_TWIST ) {
     s_rotaryEncoderPinA = getPin(INDEX_PIN_ROT_ENC_A);
     s_rotaryEncoderPinB = getPin(INDEX_PIN_ROT_ENC_B);
@@ -133,14 +130,23 @@ void NanoProtoShield::begin(INDEX_PINS pinout[] = NULL){
   // Set up the OLED display
   // This begin() call tries to put 1024 bytes on the stack for the display buffer, which
   // is half of the entire stack! Easy to blow it.
-  if(m_oled){
+  if( m_features & FEATURE_OLED ){
+    m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, OLED_RESET);
     if (!m_oled->begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
-      Serial.println(F("SSD1306 allocation failed. Not enough stack memory for all of this."));
-      for (;;); // Don't proceed, loop forever
+      //not enough RAM! Oh no! Pare it down...
+      delete(m_oled);
+      m_oled = new Adafruit_SSD1306(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT/2, &Wire, OLED_RESET);
+      if (!m_oled->begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+        //Not even enough for half...
+        delete(m_oled);
+        m_oled = NULL;
+      }
     }
-  
-    m_oled->setTextSize(1);
-    m_oled->setTextColor(SSD1306_WHITE);
+    
+    if(m_oled){
+      m_oled->setTextSize(1);
+      m_oled->setTextColor(SSD1306_WHITE);
+    }
   }
 
   clearAllDisplays();
