@@ -35,6 +35,15 @@ struct GameSettings_t {
 };
 GameSettings_t g_gameSettings;
 
+enum GameSettingsOrder {
+  SETTING_FIRST,
+  SETTING_LEDS = SETTING_FIRST,
+  SETTING_COLORS,
+  SETTING_PREVIEW,
+  SETTING_GAME_TIME,
+  SETTING_COUNT
+};
+
 //Structure to keep RGB values together
 struct PixelColor_t {
   byte r;
@@ -50,7 +59,8 @@ byte g_goal[NUMBER_OF_PIXELS];
 byte g_guess[NUMBER_OF_PIXELS];
 
 volatile int g_userPixel = 0; //Current pixel the user is changing the color of
-volatile int g_currentConfigSetting = 0; //When in config mode this tracks which config setting is being set by the user
+volatile GameSettingsOrder g_currentConfigSetting = 0; //When in config mode this tracks which config setting is being set by the user
+volatile GameSettingsOrder g_lastConfigSetting = SETTING_COUNT;
 volatile unsigned long g_cheatTotalTime = 0; //How long did the user peek at the answer?
 volatile unsigned long g_cheatStartTime = 0; //Used to calculate the above...
 volatile unsigned long g_currentGameStarted = 0; //Used to show the game countdown timer
@@ -100,108 +110,40 @@ void setup() {
 void loop() {
   switch (g_currentState) {
     case STATE_NEW_GAME:
-      showMode(F("Memorize!"));
-      startNewGame();
-      g_currentState = STATE_MEMORIZE;
-      g_currentPreviewStarted = millis();
+      newGameState();
       break;
-    
+
     case STATE_MEMORIZE:
-      showMode(F("Memorize!"));
-      if(millis() - g_currentPreviewStarted > g_gameSettings.secondsOfPreview * 1000){
-        g_nps.rgbClear();
-        g_currentState = STATE_GUESSING;
-        g_currentGameStarted = millis();
-      }
-      showPreviewTimer();
+      memorizeState();
       break;
 
     case STATE_GUESSING:
-      showMode(F("Guess!"));
-      g_guess[g_userPixel] = abs(g_nps.rotaryRead()) % (g_gameSettings.numberOfColorOptions) + 1;
-      indicateCurrentPixel();
-      showGuess();
-      showGameTimer();
-      if (didTheyWin()) {
-        g_currentState = STATE_WIN;
-      } else if (didTheyLose()) {
-        g_currentState = STATE_LOST;
-      }
+      guessingState();
       break;
 
     case STATE_WIN:
-      g_nps.oledClear();
-      g_nps.oledPrintln(F("UR Winner!"));
-      if (g_cheatTotalTime > 0) {
-        g_nps.oledPrintln(F("Cheated 4:"));
-        g_nps.oledPrint(g_cheatTotalTime);
-        g_nps.oledPrintln(F("ms"));
-      }
-      g_nps.oledPrintln(F("Down 4 New"));
-      g_nps.oledDisplay();
-      setRgbBrightness(true);
-      g_nps.rgbShow();
-      g_nps.shiftLedWrite(0);
+      winState();
       break;
 
     case STATE_LOST:
-      g_nps.oledClear();
-      g_nps.oledPrintln(F("TOO SLOW!"));
-      g_nps.oledPrintln(F("Down 4 New"));
-      g_nps.oledDisplay();
-      g_nps.rgbClear();
-      g_nps.shiftLedWrite(0);
+      lostState();
       break;
 
     case STATE_PEEKING:
-      update_cheating_time();
-      g_nps.oledClear();
-      g_nps.oledPrintln(F("Cheater!"));
-      g_nps.oledPrint(g_cheatTotalTime);
-      g_nps.oledPrintln(F("ms"));
-      g_nps.oledDisplay();
-      showGoal();
-      showGameTimer();
+      peekingState();
       break;
 
     case STATE_CONFIG:
-      g_nps.setRotaryEncoderButtonInterrupt(isr_nextSetting, BUTTON_PRESSED); //change the ISR for the rotary encoder button. Must be put back!
-      g_nps.rotaryWrite(1);
-      g_currentConfigSetting = 0;
-      g_nps.clearAllDisplays();
-      while (g_currentConfigSetting < 4) { //We don't leave this config mode until all settings are set!
-        switch (g_currentConfigSetting) {
-          case 0:
-            showMode(F("Number of LEDS?"));
-            g_gameSettings.numberOfLEDs = max(min(g_nps.rotaryRead(), NUMBER_OF_PIXELS), 1);
-            g_nps.rotaryWrite(g_gameSettings.numberOfLEDs);
-            g_nps.shift7segPrint(g_gameSettings.numberOfLEDs);
-            break;
-          case 1:
-            showMode(F("Number of colors?"));
-            g_gameSettings.numberOfColorOptions = max(min(g_nps.rotaryRead(), 7), 2);
-            g_nps.rotaryWrite(g_gameSettings.numberOfColorOptions);
-            g_nps.shift7segPrint(g_gameSettings.numberOfColorOptions);
-            break;
-          case 2:
-            showMode(F("Seconds of preview?"));
-            g_gameSettings.secondsOfPreview = max(min(g_nps.rotaryRead(), 10), 1);
-            g_nps.rotaryWrite(g_gameSettings.secondsOfPreview);
-            g_nps.shift7segPrint(g_gameSettings.secondsOfPreview);
-            break;
-          case 3:
-            showMode(F("Seconds to guess?"));
-            g_gameSettings.secondsOfGame = 5 * max(min(g_nps.rotaryRead(), 12), 1); //1*5=5 and 12*5=60
-            g_nps.rotaryWrite(g_gameSettings.secondsOfGame/5);
-            g_nps.shift7segPrint(g_gameSettings.secondsOfGame);
-            break;
-        }
-      }
-      writeSettingsToEEPROM();
-      g_nps.setRotaryEncoderButtonInterrupt(isr_nextPixel, BUTTON_PRESSED); //putting the rotary encoder's ISR back to normal.
-      g_currentState = STATE_NEW_GAME;
+      configState();
       break;
   }
+}
+
+void newGameState() {
+  showMode(F("Memorize!"));
+  startNewGame();
+  g_currentState = STATE_MEMORIZE;
+  g_currentPreviewStarted = millis();
 }
 
 void showMode(const __FlashStringHelper *modeText) {
@@ -240,6 +182,83 @@ void resetGuess() {
   g_userPixel = 0;
 }
 
+void showGoal() {
+  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
+    g_nps.rgbSetPixelColor( i, g_colorOptions[g_goal[i]].r, g_colorOptions[g_goal[i]].g, g_colorOptions[g_goal[i]].b);
+  }
+  g_nps.rgbShow();
+}
+
+void memorizeState() {
+  showMode(F("Memorize!"));
+  if (millis() - g_currentPreviewStarted > g_gameSettings.secondsOfPreview * 1000) {
+    g_nps.rgbClear();
+    g_currentState = STATE_GUESSING;
+    g_currentGameStarted = millis();
+  }
+  showPreviewTimer();
+}
+
+void showPreviewTimer() {
+  g_nps.shift7segPrint(g_gameSettings.secondsOfPreview - (millis() - g_currentPreviewStarted) / 1000);
+}
+
+void guessingState() {
+  showMode(F("Guess!"));
+  g_guess[g_userPixel] = abs(g_nps.rotaryRead()) % (g_gameSettings.numberOfColorOptions) + 1;
+  indicateCurrentPixel();
+  showGuess();
+  showGameTimer();
+  if (didTheyWin()) {
+    g_currentState = STATE_WIN;
+  } else if (didTheyLose()) {
+    g_currentState = STATE_LOST;
+  }
+}
+
+void indicateCurrentPixel() {
+  g_nps.shiftLedWrite(1 << g_userPixel);
+}
+
+void showGuess() {
+  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
+    g_nps.rgbSetPixelColor( i, g_colorOptions[g_guess[i]].r, g_colorOptions[g_guess[i]].g, g_colorOptions[g_guess[i]].b);
+  }
+  g_nps.rgbShow();
+}
+
+void showGameTimer() {
+  g_nps.shift7segPrint(g_gameSettings.secondsOfGame - (millis() - g_currentGameStarted) / 1000);
+}
+
+bool didTheyWin() {
+  bool theyWon = true;
+  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
+    theyWon = theyWon && ( g_goal[i] == g_guess[i] );
+  }
+
+  return theyWon;
+}
+
+bool didTheyLose() {
+  return ( (millis() - g_currentGameStarted) > (g_gameSettings.secondsOfGame * 1000) );
+}
+
+void winState() {
+  g_nps.oledClear();
+  g_nps.oledPrintln(F("UR Winner!"));
+  if (g_cheatTotalTime > 0) {
+    g_nps.oledPrintln(F("Cheated 4:"));
+    g_nps.oledPrint(g_cheatTotalTime);
+    g_nps.oledPrintln(F("ms"));
+  }
+  g_nps.oledPrintln(F("Down 4 New"));
+  g_nps.oledDisplay();
+  setRgbBrightness(true);
+  g_nps.rgbShow();
+  g_nps.shiftLedWrite(0);
+}
+
 void setRgbBrightness(bool flash) {
   if (flash) {
     if (trueFourTimesASecond()) {
@@ -256,43 +275,103 @@ bool trueFourTimesASecond() {
   return ( ( millis() / 250 ) % 2 );
 }
 
-void showGoal() {
-  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
-    g_nps.rgbSetPixelColor( i, g_colorOptions[g_goal[i]].r, g_colorOptions[g_goal[i]].g, g_colorOptions[g_goal[i]].b);
+void lostState() {
+  g_nps.oledClear();
+  g_nps.oledPrintln(F("TOO SLOW!"));
+  g_nps.oledPrintln(F("Down 4 New"));
+  g_nps.oledDisplay();
+  g_nps.rgbClear();
+  g_nps.shiftLedWrite(0);
+}
+
+void peekingState() {
+  update_cheating_time();
+  g_nps.oledClear();
+  g_nps.oledPrintln(F("Cheater!"));
+  g_nps.oledPrint(g_cheatTotalTime);
+  g_nps.oledPrintln(F("ms"));
+  g_nps.oledDisplay();
+  showGoal();
+  showGameTimer();
+}
+
+void update_cheating_time() {
+  g_cheatTotalTime += (millis() - g_cheatStartTime);
+  g_cheatStartTime = millis();
+}
+
+void configState() {
+  g_nps.setRotaryEncoderButtonInterrupt(isr_nextSetting, BUTTON_PRESSED); //change the ISR for the rotary encoder button. Must be put back!
+  g_currentConfigSetting = SETTING_FIRST;
+  g_nps.clearAllDisplays();
+  while (g_currentConfigSetting < SETTING_COUNT) { //We don't leave this config mode until all settings are set!
+    setRotaryToCurrentConfigSetting(); //make sure the rotary value tracks with the current setting
+    switch (g_currentConfigSetting) {
+      case SETTING_LEDS:
+        stateSettingLEDs();
+        break;
+      case SETTING_COLORS:
+        stateSettingColors();
+        break;
+      case SETTING_PREVIEW:
+        stateSettingPreview();
+        break;
+      case SETTING_GAME_TIME:
+        stateSettingGameTime();
+        break;
+    }
   }
-  g_nps.rgbShow();
+  writeSettingsToEEPROM();
+  g_nps.setRotaryEncoderButtonInterrupt(isr_nextPixel, BUTTON_PRESSED); //putting the rotary encoder's ISR back to normal.
+  g_currentState = STATE_NEW_GAME;
 }
 
-void showPreviewTimer() {
-  g_nps.shift7segPrint(g_gameSettings.secondsOfPreview - (millis() - g_currentPreviewStarted)/1000);
+void stateSettingLEDs() {
+  showMode(F("Number of LEDS?"));
+  g_gameSettings.numberOfLEDs = max(min(g_nps.rotaryRead(), NUMBER_OF_PIXELS), 1);
+  g_nps.rotaryWrite(g_gameSettings.numberOfLEDs);
+  g_nps.shift7segPrint(g_gameSettings.numberOfLEDs);
 }
 
-void showGameTimer() {
-  g_nps.shift7segPrint(g_gameSettings.secondsOfGame - (millis() - g_currentGameStarted)/1000);
+void stateSettingColors() {
+  showMode(F("Number of colors?"));
+  g_gameSettings.numberOfColorOptions = max(min(g_nps.rotaryRead(), 7), 2);
+  g_nps.rotaryWrite(g_gameSettings.numberOfColorOptions);
+  g_nps.shift7segPrint(g_gameSettings.numberOfColorOptions);
 }
 
-void indicateCurrentPixel() {
-  g_nps.shiftLedWrite(1 << g_userPixel);
+void stateSettingPreview() {
+  showMode(F("Seconds of preview?"));
+  g_gameSettings.secondsOfPreview = max(min(g_nps.rotaryRead(), 10), 1);
+  g_nps.rotaryWrite(g_gameSettings.secondsOfPreview);
+  g_nps.shift7segPrint(g_gameSettings.secondsOfPreview);
 }
 
-void showGuess() {
-  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
-    g_nps.rgbSetPixelColor( i, g_colorOptions[g_guess[i]].r, g_colorOptions[g_guess[i]].g, g_colorOptions[g_guess[i]].b);
+void stateSettingGameTime() {
+  showMode(F("Seconds to guess?"));
+  g_gameSettings.secondsOfGame = 5 * max(min(g_nps.rotaryRead(), 12), 1); //1*5=5 and 12*5=60
+  g_nps.rotaryWrite(g_gameSettings.secondsOfGame / 5);
+  g_nps.shift7segPrint(g_gameSettings.secondsOfGame);
+}
+
+void setRotaryToCurrentConfigSetting() {
+  if (g_lastConfigSetting != g_currentConfigSetting) {
+    g_lastConfigSetting = g_currentConfigSetting; //make sure we only do this once
+    switch (g_currentConfigSetting) {
+      case SETTING_LEDS:
+        g_nps.rotaryWrite(g_gameSettings.numberOfLEDs);
+        break;
+      case SETTING_COLORS:
+        g_nps.rotaryWrite(g_gameSettings.numberOfColorOptions);
+        break;
+      case SETTING_PREVIEW:
+        g_nps.rotaryWrite(g_gameSettings.secondsOfPreview);
+        break;
+      case SETTING_GAME_TIME:
+        g_nps.rotaryWrite(g_gameSettings.secondsOfGame / 5);
+        break;
+    }
   }
-  g_nps.rgbShow();
-}
-
-bool didTheyWin() {
-  bool theyWon = true;
-  for (int i = 0; i < NUMBER_OF_PIXELS; i++) {
-    theyWon = theyWon && ( g_goal[i] == g_guess[i] );
-  }
-
-  return theyWon;
-}
-
-bool didTheyLose() {
-  return ( (millis() - g_currentGameStarted) > (g_gameSettings.secondsOfGame * 1000) );
 }
 
 void writeSettingsToEEPROM() {
@@ -301,11 +380,6 @@ void writeSettingsToEEPROM() {
 
 void getSettingsFromEEPROM() {
   EEPROM.get(0, g_gameSettings);
-}
-
-void update_cheating_time(){
-  g_cheatTotalTime += (millis() - g_cheatStartTime);
-  g_cheatStartTime = millis();
 }
 
 void isr_nextPixel() {
@@ -334,5 +408,5 @@ void isr_configMode() {
 }
 
 void isr_nextSetting() {
-  g_currentConfigSetting++;
+  g_currentConfigSetting = (GameSettingsOrder)(g_currentConfigSetting + 1);
 }
