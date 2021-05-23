@@ -418,3 +418,4 @@ void isr_configMode() {
 
 void isr_nextSetting() {
   g_currentConfigSetting = (GameSettingsOrder)(g_currentConfigSetting + 1);
+}
