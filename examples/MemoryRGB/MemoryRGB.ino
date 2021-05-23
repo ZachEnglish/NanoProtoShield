@@ -147,6 +147,7 @@ void newGameState() {
 }
 
 void showMode(const __FlashStringHelper *modeText) {
+  g_nps.oledSetTextSize(2);
   g_nps.oledClear();
   g_nps.oledPrintln(modeText);
   g_nps.oledDisplay();
@@ -246,17 +247,24 @@ bool didTheyLose() {
 
 void winState() {
   g_nps.oledClear();
+  g_nps.oledSetTextSize(2);
   g_nps.oledPrintln(F("UR Winner!"));
   if (g_cheatTotalTime > 0) {
     g_nps.oledPrintln(F("Cheated 4:"));
     g_nps.oledPrint(g_cheatTotalTime);
     g_nps.oledPrintln(F("ms"));
   }
-  g_nps.oledPrintln(F("Down 4 New"));
+  showEndGameText();
   g_nps.oledDisplay();
   setRgbBrightness(true);
   g_nps.rgbShow();
   g_nps.shiftLedWrite(0);
+}
+
+void showEndGameText() {
+  g_nps.oledSetTextSize(1);
+  g_nps.oledPrintln(F("Down for New Game"));
+  g_nps.oledPrintln(F("Left to Config"));
 }
 
 void setRgbBrightness(bool flash) {
@@ -277,8 +285,9 @@ bool trueFourTimesASecond() {
 
 void lostState() {
   g_nps.oledClear();
+  g_nps.oledSetTextSize(2);
   g_nps.oledPrintln(F("TOO SLOW!"));
-  g_nps.oledPrintln(F("Down 4 New"));
+  showEndGameText();
   g_nps.oledDisplay();
   g_nps.rgbClear();
   g_nps.shiftLedWrite(0);
@@ -409,4 +418,3 @@ void isr_configMode() {
 
 void isr_nextSetting() {
   g_currentConfigSetting = (GameSettingsOrder)(g_currentConfigSetting + 1);
-}
